@@ -3,10 +3,322 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:Spider"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
+        Title="Spider - CRUD приложение" 
+        Height="700" 
+        Width="1200"
+        WindowStartupLocation="CenterScreen"
+        Background="#F5F5F5">
 
+    <Window.Resources>
+        <!-- Стиль для вкладок -->
+        <Style TargetType="TabItem">
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="20,10"/>
+        </Style>
+
+        <!-- Стиль для кнопок -->
+        <Style TargetType="Button" x:Key="PrimaryButton">
+            <Setter Property="Background" Value="#2196F3"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Padding" Value="15,8"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                                CornerRadius="4"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" 
+                                            VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#1976D2"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Стиль для маленьких кнопок -->
+        <Style TargetType="Button" x:Key="SmallButton">
+            <Setter Property="Padding" Value="8,4"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                                CornerRadius="3"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" 
+                                            VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Стиль для кнопки "Добавить" -->
+        <Style TargetType="Button" x:Key="AddButton">
+            <Setter Property="Background" Value="#4CAF50"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Padding" Value="20,12"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                                CornerRadius="6"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" 
+                                            VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#45A049"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <!-- Главный TabControl с вкладками -->
+        <TabControl TabStripPlacement="Top" 
+                    Margin="10"
+                    Background="White">
+
+            <!-- Вкладка 1: Категории -->
+            <TabItem Header="📁 Категории">
+                <Grid Margin="10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="300"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Левая панель: список категорий -->
+                    <Border Grid.Column="0" 
+                            BorderBrush="#E0E0E0" 
+                            BorderThickness="1" 
+                            CornerRadius="4"
+                            Margin="0,0,10,0">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- Заголовок -->
+                            <TextBlock Grid.Row="0" 
+                                     Text="Категории" 
+                                     FontSize="16" 
+                                     FontWeight="Bold"
+                                     Margin="10"
+                                     Foreground="#333"/>
+
+                            <!-- Список категорий с кнопками -->
+                            <ListBox Grid.Row="1" 
+                                   x:Name="CategoriesListBox"
+                                   Margin="10,0"
+                                   BorderThickness="0"
+                                   ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+
+                                <!-- Шаблон элемента списка -->
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border BorderBrush="#E0E0E0" 
+                                              BorderThickness="0,0,0,1" 
+                                              Padding="10,8">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+
+                                                <!-- Название категории -->
+                                                <StackPanel Grid.Column="0">
+                                                    <TextBlock Text="{Binding Name}" 
+                                                             FontWeight="SemiBold"
+                                                             FontSize="13"
+                                                             Foreground="#333"/>
+                                                    <TextBlock Text="{Binding Description}" 
+                                                             FontSize="11"
+                                                             Foreground="#666"
+                                                             TextTrimming="CharacterEllipsis"/>
+                                                </StackPanel>
+
+                                                <!-- Кнопки действий -->
+                                                <StackPanel Grid.Column="1" 
+                                                          Orientation="Horizontal"
+                                                          VerticalAlignment="Center">
+                                                    <Button Content="✏️" 
+                                                          Style="{StaticResource SmallButton}"
+                                                          Background="#FF9800"
+                                                          Foreground="White"
+                                                          Width="28" Height="24"
+                                                          Margin="2"
+                                                          ToolTip="Редактировать"
+                                                          Tag="{Binding}"
+                                                          Command="{Binding DataContext.EditCategoryCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                          CommandParameter="{Binding}"/>
+                                                    <Button Content="🗑️" 
+                                                          Style="{StaticResource SmallButton}"
+                                                          Background="#F44336"
+                                                          Foreground="White"
+                                                          Width="28" Height="24"
+                                                          Margin="2"
+                                                          ToolTip="Удалить"
+                                                          Tag="{Binding}"
+                                                          Command="{Binding DataContext.DeleteCategoryCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                          CommandParameter="{Binding}"/>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+
+                            <!-- Большая кнопка "Добавить категорию" -->
+                            <Button Grid.Row="2" 
+                                  Content="➕ Добавить категорию" 
+                                  Style="{StaticResource AddButton}"
+                                  Margin="10"
+                                  x:Name="AddCategoryButton"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Правая панель: данные категории -->
+                    <Border Grid.Column="1" 
+                            BorderBrush="#E0E0E0" 
+                            BorderThickness="1" 
+                            CornerRadius="4">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- Заголовок с названием выбранной категории -->
+                            <StackPanel Grid.Row="0" 
+                                      Orientation="Horizontal"
+                                      Margin="10">
+                                <TextBlock Text="Данные категории: " 
+                                         FontSize="16" 
+                                         FontWeight="Bold"
+                                         Foreground="#333"/>
+                                <TextBlock x:Name="SelectedCategoryName" 
+                                         Text="(выберите категорию)" 
+                                         FontSize="16" 
+                                         FontWeight="SemiBold"
+                                         Foreground="#2196F3"/>
+                            </StackPanel>
+
+                            <!-- DataGrid с данными -->
+                            <DataGrid Grid.Row="1" 
+                                    x:Name="CategoryDataGrid"
+                                    Margin="10,0"
+                                    AutoGenerateColumns="False"
+                                    CanUserAddRows="False"
+                                    HeadersVisibility="Column"
+                                    GridLinesVisibility="Horizontal">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Название" 
+                                                      Binding="{Binding Name}" 
+                                                      Width="*"/>
+                                    <DataGridTextColumn Header="Значение" 
+                                                      Binding="{Binding Value}" 
+                                                      Width="2*"/>
+                                    <DataGridTemplateColumn Header="Действия" Width="120">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <StackPanel Orientation="Horizontal" 
+                                                          HorizontalAlignment="Center">
+                                                    <Button Content="✏️" 
+                                                          Style="{StaticResource SmallButton}"
+                                                          Background="#FF9800"
+                                                          Foreground="White"
+                                                          Width="28" Height="24"
+                                                          Margin="2"
+                                                          ToolTip="Редактировать"
+                                                          Tag="{Binding}"
+                                                          Command="{Binding DataContext.EditCategoryCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                          CommandParameter="{Binding}"/>
+                                                    <Button Content="🗑️" 
+                                                          Style="{StaticResource SmallButton}"
+                                                          Background="#F44336"
+                                                          Foreground="White"
+                                                          Width="28" Height="24"
+                                                          Margin="2"
+                                                          ToolTip="Удалить"
+                                                          Tag="{Binding}"
+                                                          Command="{Binding DataContext.DeleteCategoryCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                          CommandParameter="{Binding}"/>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+
+                            <!-- Большая кнопка "Добавить данные" -->
+                            <Button Grid.Row="2" 
+                                  Content="➕ Добавить данные" 
+                                  Style="{StaticResource AddButton}"
+                                  Margin="10"
+                                  x:Name="AddCategoryDataButton"
+                                  IsEnabled="False"/>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </TabItem>
+
+            <!-- Вкладка 2: Команды -->
+            <TabItem Header="⚡ Команды">
+                <Grid Margin="10">
+                    <TextBlock Text="Вкладка команд (создадим на следующем шаге)" 
+                             FontSize="18" 
+                             HorizontalAlignment="Center" 
+                             VerticalAlignment="Center"
+                             Foreground="#999"/>
+                </Grid>
+            </TabItem>
+
+            <!-- Вкладка 3: Docker проекты -->
+            <TabItem Header="🐳 Docker">
+                <Grid Margin="10">
+                    <TextBlock Text="Вкладка Docker (создадим на следующем шаге)" 
+                             FontSize="18" 
+                             HorizontalAlignment="Center" 
+                             VerticalAlignment="Center"
+                             Foreground="#999"/>
+                </Grid>
+            </TabItem>
+
+            <!-- Вкладка 4: Скриншоты -->
+            <TabItem Header="📸 Скриншоты">
+                <Grid Margin="10">
+                    <TextBlock Text="Вкладка скриншотов (создадим на следующем шаге)" 
+                             FontSize="18" 
+                             HorizontalAlignment="Center" 
+                             VerticalAlignment="Center"
+                             Foreground="#999"/>
+                </Grid>
+            </TabItem>
+
+        </TabControl>
     </Grid>
 </Window>
