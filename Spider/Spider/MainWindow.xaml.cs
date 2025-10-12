@@ -11,6 +11,7 @@ namespace Spider
     {
         private readonly CategoriesViewModel _categoriesViewModel;
         private readonly CommandsViewModel _commandsViewModel;
+        private readonly DockerViewModel _dockerViewModel;
 
         public MainWindow()
         {
@@ -21,6 +22,9 @@ namespace Spider
 
             // Создаем ViewModel для команд
             _commandsViewModel = new CommandsViewModel();
+            
+            // Создаем ViewModel для Docker
+            _dockerViewModel = new DockerViewModel();
 
             // Устанавливаем DataContext для привязки данных (для категорий через XAML)
             DataContext = _categoriesViewModel;
@@ -143,15 +147,68 @@ namespace Spider
 
             // Для команд редактирования и удаления нужно использовать обработчики событий
             // так как DataContext у Window установлен на _categoriesViewModel
-            // Создаем временный класс для хранения обоих ViewModel
+            // Создаем временный класс для хранения всех ViewModel
             var combinedDataContext = new CombinedViewModel
             {
                 CategoriesViewModel = _categoriesViewModel,
-                CommandsViewModel = _commandsViewModel
+                CommandsViewModel = _commandsViewModel,
+                DockerViewModel = _dockerViewModel
             };
             
             // Обновляем DataContext
             DataContext = combinedDataContext;
+
+            #endregion
+
+            #region Инициализация вкладки Docker
+
+            // Привязываем коллекции к UI элементам
+            DockerProjectsListBox.ItemsSource = _dockerViewModel.Projects;
+            DockerImagesDataGrid.ItemsSource = _dockerViewModel.Images;
+
+            // Привязываем выбранный проект
+            DockerProjectsListBox.SelectionChanged += (s, e) =>
+            {
+                var selectedProject = DockerProjectsListBox.SelectedItem as Models.DockerProject;
+                _dockerViewModel.SelectedProject = selectedProject;
+                
+                // Управляем видимостью элементов в правой панели
+                if (selectedProject != null)
+                {
+                    SelectedDockerProjectName.Text = selectedProject.Name;
+                    DockerControlPanel.Visibility = Visibility.Visible;
+                    DockerImagesDataGrid.Visibility = Visibility.Visible;
+                    NoDockerProjectMessage.Visibility = Visibility.Collapsed;
+                }
+                else
+                {
+                    SelectedDockerProjectName.Text = "(выберите проект)";
+                    DockerControlPanel.Visibility = Visibility.Collapsed;
+                    DockerImagesDataGrid.Visibility = Visibility.Collapsed;
+                    NoDockerProjectMessage.Visibility = Visibility.Visible;
+                }
+            };
+
+            // Привязываем вывод билда
+            _dockerViewModel.PropertyChanged += (s, e) =>
+            {
+                if (e.PropertyName == nameof(_dockerViewModel.BuildOutput))
+                {
+                    DockerBuildOutputTextBox.Text = _dockerViewModel.BuildOutput;
+                    DockerBuildOutputTextBox.ScrollToEnd();
+                }
+            };
+
+            // Привязываем команды к кнопкам
+            AddDockerProjectButton.Command = _dockerViewModel.AddProjectCommand;
+            RefreshDockerImagesButton.Command = _dockerViewModel.RefreshImagesCommand;
+            StartAllDockerImagesButton.Command = _dockerViewModel.StartAllImagesCommand;
+            StopAllDockerImagesButton.Command = _dockerViewModel.StopAllImagesCommand;
+            ClearDockerOutputButton.Command = _dockerViewModel.ClearOutputCommand;
+
+            // Инициализируем состояние панели управления
+            DockerControlPanel.Visibility = Visibility.Collapsed;
+            DockerImagesDataGrid.Visibility = Visibility.Collapsed;
 
             #endregion
         }
@@ -161,6 +218,7 @@ namespace Spider
             // Освобождаем ресурсы при закрытии окна
             _categoriesViewModel?.Dispose();
             _commandsViewModel?.Dispose();
+            _dockerViewModel?.Dispose();
             base.OnClosed(e);
         }
 
@@ -169,6 +227,7 @@ namespace Spider
         {
             public CategoriesViewModel? CategoriesViewModel { get; set; }
             public CommandsViewModel? CommandsViewModel { get; set; }
+            public DockerViewModel? DockerViewModel { get; set; }
             
             // Прокси свойства для категорий
             public System.Windows.Input.ICommand? EditCategoryCommand => CategoriesViewModel?.EditCategoryCommand;
@@ -179,6 +238,13 @@ namespace Spider
             // Прокси свойства для команд
             public System.Windows.Input.ICommand? EditCommandCommand => CommandsViewModel?.EditCommandCommand;
             public System.Windows.Input.ICommand? DeleteCommandCommand => CommandsViewModel?.DeleteCommandCommand;
+            
+            // Прокси свойства для Docker
+            public System.Windows.Input.ICommand? EditDockerProjectCommand => DockerViewModel?.EditProjectCommand;
+            public System.Windows.Input.ICommand? DeleteDockerProjectCommand => DockerViewModel?.DeleteProjectCommand;
+            public System.Windows.Input.ICommand? StartDockerImageCommand => DockerViewModel?.StartImageCommand;
+            public System.Windows.Input.ICommand? StopDockerImageCommand => DockerViewModel?.StopImageCommand;
+            public System.Windows.Input.ICommand? RebuildDockerImageCommand => DockerViewModel?.RebuildImageCommand;
         }
     }
 }

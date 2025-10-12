@@ -1,0 +1,189 @@
+<Window x:Class="Spider.Views.Dialogs.DockerProjectDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="{Binding DialogTitle}" 
+        Height="550" 
+        Width="700"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        Background="#F5F5F5">
+
+    <Window.Resources>
+        <Style TargetType="Button">
+            <Setter Property="Padding" Value="20,10"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                                CornerRadius="6"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" 
+                                            VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#1976D2"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style TargetType="TextBox">
+            <Setter Property="Padding" Value="12"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Foreground" Value="#333"/>
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="BorderBrush" Value="#E0E0E0"/>
+            <Setter Property="Background" Value="White"/>
+            <Style.Triggers>
+                <Trigger Property="IsFocused" Value="True">
+                    <Setter Property="BorderBrush" Value="#2196F3"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style TargetType="TextBlock">
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Foreground" Value="#333"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <Style TargetType="Button" x:Key="BrowseButton">
+            <Setter Property="Background" Value="#607D8B"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Padding" Value="12,8"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                                CornerRadius="4"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" 
+                                            VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#546E7A"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="30">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Заголовок -->
+        <TextBlock Grid.Row="0" 
+                 x:Name="TitleTextBlock"
+                 FontSize="20" 
+                 FontWeight="Bold"
+                 Margin="0,0,0,30"
+                 HorizontalAlignment="Center"
+                 Foreground="#2196F3"/>
+
+        <!-- Форма -->
+        <ScrollViewer Grid.Row="1" 
+                     VerticalScrollBarVisibility="Auto"
+                     Margin="0,0,0,0">
+            <StackPanel>
+                <!-- Название проекта -->
+                <StackPanel Margin="0,0,0,20">
+                    <TextBlock Text="Название проекта *" 
+                             FontWeight="SemiBold"
+                             FontSize="15"
+                             Margin="0,0,0,8"/>
+                    <TextBox x:Name="NameTextBox"
+                           Text="{Binding Project.Name, UpdateSourceTrigger=PropertyChanged}"
+                           MaxLength="50"
+                           Height="45"/>
+                    <TextBlock Text="Например: My App, Backend Services и т.д." 
+                             FontSize="11"
+                             Foreground="#999"
+                             Margin="0,4,0,0"/>
+                </StackPanel>
+
+                <!-- Путь к docker-compose файлу -->
+                <StackPanel Margin="0,0,0,20">
+                    <TextBlock Text="Путь к docker-compose файлу *" 
+                             FontWeight="SemiBold"
+                             FontSize="15"
+                             Margin="0,0,0,8"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="10"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox Grid.Column="0"
+                               x:Name="DockerComposePathTextBox"
+                               Text="{Binding Project.DockerComposePath, UpdateSourceTrigger=PropertyChanged}"
+                               MaxLength="500"
+                               Height="45"/>
+                        <Button Grid.Column="2"
+                              Content="📁 Обзор"
+                              Style="{StaticResource BrowseButton}"
+                              Click="BrowseFileButton_Click"/>
+                    </Grid>
+                    <TextBlock Text="Выберите файл docker-compose.yml или docker-compose.yaml" 
+                             FontSize="11"
+                             Foreground="#999"
+                             Margin="0,4,0,0"/>
+                </StackPanel>
+
+                <!-- Описание -->
+                <StackPanel>
+                    <TextBlock Text="Описание (необязательно)" 
+                             FontWeight="SemiBold"
+                             FontSize="15"
+                             Margin="0,0,0,8"/>
+                    <TextBox x:Name="DescriptionTextBox"
+                           Text="{Binding Project.Description, UpdateSourceTrigger=PropertyChanged}"
+                           TextWrapping="Wrap"
+                           AcceptsReturn="True"
+                           Height="120"
+                           VerticalScrollBarVisibility="Auto"
+                           MaxLength="500"/>
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Кнопки на всю ширину -->
+        <Grid Grid.Row="2" 
+              Margin="0,30,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="20"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Button Grid.Column="0"
+                  Content="Отмена" 
+                  Background="#757575"
+                  Foreground="White"
+                  Click="CancelButton_Click"/>
+
+            <Button Grid.Column="2"
+                  x:Name="OkButton"
+                  Background="#4CAF50"
+                  Foreground="White"
+                  Click="OkButton_Click"/>
+        </Grid>
+    </Grid>
+</Window>
+
