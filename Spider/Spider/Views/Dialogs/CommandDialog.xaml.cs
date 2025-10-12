@@ -5,7 +5,7 @@ using Microsoft.Win32;
 namespace Spider.Views.Dialogs
 {
     /// <summary>
-    /// Interaction logic for CommandDialog.xaml
+    /// Логика взаимодействия для CommandDialog.xaml
     /// </summary>
     public partial class CommandDialog : Window
     {
@@ -21,10 +21,8 @@ namespace Spider.Views.Dialogs
             IsEditMode = command != null;
             Command = command ?? new Command();
 
-            // Устанавливаем DataContext на сам диалог для доступа к свойствам
             DataContext = this;
 
-            // Устанавливаем заголовок и текст кнопки
             TitleTextBlock.Text = DialogTitle;
             OkButton.Content = OkButtonText;
 
@@ -44,7 +42,6 @@ namespace Spider.Views.Dialogs
                 ShowNewFolderButton = true
             };
 
-            // Если путь уже указан, устанавливаем его как начальный
             if (!string.IsNullOrWhiteSpace(Command.FolderPath) && System.IO.Directory.Exists(Command.FolderPath))
             {
                 dialog.SelectedPath = Command.FolderPath;
@@ -59,7 +56,6 @@ namespace Spider.Views.Dialogs
 
         private void OkButton_Click(object sender, RoutedEventArgs e)
         {
-            // Проверяем валидность данных
             if (string.IsNullOrWhiteSpace(Command.Name))
             {
                 MessageBox.Show("Название команды обязательно для заполнения!",
@@ -70,7 +66,6 @@ namespace Spider.Views.Dialogs
                 return;
             }
 
-            // Проверяем длину названия
             if (Command.Name.Length < 2 || Command.Name.Length > 100)
             {
                 MessageBox.Show("Название команды должно содержать от 2 до 100 символов!",
@@ -81,7 +76,6 @@ namespace Spider.Views.Dialogs
                 return;
             }
 
-            // Проверяем рабочую директорию
             if (string.IsNullOrWhiteSpace(Command.FolderPath))
             {
                 MessageBox.Show("Рабочая директория обязательна для заполнения!",
@@ -92,7 +86,6 @@ namespace Spider.Views.Dialogs
                 return;
             }
 
-            // Проверяем существование директории
             if (!System.IO.Directory.Exists(Command.FolderPath))
             {
                 var result = MessageBox.Show($"Директория '{Command.FolderPath}' не существует.\n\nВсё равно сохранить?",
@@ -106,7 +99,6 @@ namespace Spider.Views.Dialogs
                 }
             }
 
-            // Проверяем команду
             if (string.IsNullOrWhiteSpace(Command.CommandText))
             {
                 MessageBox.Show("Команда обязательна для заполнения!",
@@ -117,7 +109,6 @@ namespace Spider.Views.Dialogs
                 return;
             }
 
-            // Проверяем длину команды
             if (Command.CommandText.Length < 1 || Command.CommandText.Length > 1000)
             {
                 MessageBox.Show("Команда должна содержать от 1 до 1000 символов!",

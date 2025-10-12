@@ -168,7 +168,6 @@ namespace Spider.ViewModels
             }
             catch (Exception ex)
             {
-                // TODO: Показать ошибку пользователю
                 System.Diagnostics.Debug.WriteLine($"Ошибка загрузки категорий: {ex.Message}");
             }
             finally
@@ -201,7 +200,6 @@ namespace Spider.ViewModels
             }
             catch (Exception ex)
             {
-                // TODO: Показать ошибку пользователю
                 System.Diagnostics.Debug.WriteLine($"Ошибка загрузки данных категории: {ex.Message}");
             }
             finally
@@ -234,7 +232,7 @@ namespace Spider.ViewModels
             try
             {
                 await _categoryService.AddCategoryAsync(category);
-                await LoadCategoriesAsync(); // Перезагружаем список
+                await LoadCategoriesAsync();
             }
             catch (Exception ex)
             {
@@ -294,7 +292,7 @@ namespace Spider.ViewModels
                 try
                 {
                     await _categoryService.DeleteCategoryAsync(categoryToDelete.Id);
-                    await LoadCategoriesAsync(); // Перезагружаем список
+                    await LoadCategoriesAsync();
                     if (SelectedCategory == categoryToDelete)
                         SelectedCategory = null;
                 }
@@ -380,7 +378,7 @@ namespace Spider.ViewModels
                 try
                 {
                     await _categoryService.DeleteCategoryDataAsync(dataToDelete.Id);
-                    await LoadCategoryDataAsync(); // Перезагружаем данные
+                    await LoadCategoryDataAsync();
                     if (SelectedCategoryData == dataToDelete)
                         SelectedCategoryData = null;
                 }
@@ -402,7 +400,7 @@ namespace Spider.ViewModels
             try
             {
                 await _categoryService.UpdateCategoryAsync(category);
-                await LoadCategoriesAsync(); // Перезагружаем список
+                await LoadCategoriesAsync();
             }
             catch (Exception ex)
             {
@@ -421,7 +419,7 @@ namespace Spider.ViewModels
             try
             {
                 await _categoryService.AddCategoryDataAsync(categoryData);
-                await LoadCategoryDataAsync(); // Перезагружаем данные
+                await LoadCategoryDataAsync();
             }
             catch (Exception ex)
             {
@@ -440,7 +438,7 @@ namespace Spider.ViewModels
             try
             {
                 await _categoryService.UpdateCategoryDataAsync(categoryData);
-                await LoadCategoryDataAsync(); // Перезагружаем данные
+                await LoadCategoryDataAsync();
             }
             catch (Exception ex)
             {

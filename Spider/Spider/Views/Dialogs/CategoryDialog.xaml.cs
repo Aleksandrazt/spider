@@ -4,7 +4,7 @@ using System.Windows;
 namespace Spider.Views.Dialogs
 {
     /// <summary>
-    /// Interaction logic for CategoryDialog.xaml
+    /// Логика взаимодействия для CategoryDialog.xaml
     /// </summary>
     public partial class CategoryDialog : Window
     {
@@ -20,10 +20,8 @@ namespace Spider.Views.Dialogs
             IsEditMode = category != null;
             Category = category ?? new Category();
             
-            // Устанавливаем DataContext на сам диалог для доступа к свойствам
             DataContext = this;
             
-            // Устанавливаем заголовок и текст кнопки
             TitleTextBlock.Text = DialogTitle;
             OkButton.Content = OkButtonText;
             
@@ -37,7 +35,6 @@ namespace Spider.Views.Dialogs
 
         private void OkButton_Click(object sender, RoutedEventArgs e)
         {
-            // Проверяем валидность данных
             if (string.IsNullOrWhiteSpace(Category.Name))
             {
                 MessageBox.Show("Название категории обязательно для заполнения!",
@@ -48,7 +45,6 @@ namespace Spider.Views.Dialogs
                 return;
             }
 
-            // Проверяем длину названия
             if (Category.Name.Length < 2 || Category.Name.Length > 50)
             {
                 MessageBox.Show("Название категории должно содержать от 2 до 50 символов!",

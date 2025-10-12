@@ -5,7 +5,7 @@ using WpfOpenFileDialog = Microsoft.Win32.OpenFileDialog;
 namespace Spider.Views.Dialogs
 {
     /// <summary>
-    /// Interaction logic for DockerProjectDialog.xaml
+    /// Логика взаимодействия для DockerProjectDialog.xaml
     /// </summary>
     public partial class DockerProjectDialog : Window
     {
@@ -21,10 +21,8 @@ namespace Spider.Views.Dialogs
             IsEditMode = project != null;
             Project = project ?? new DockerProject();
 
-            // Устанавливаем DataContext на сам диалог для доступа к свойствам
             DataContext = this;
 
-            // Устанавливаем заголовок и текст кнопки
             TitleTextBlock.Text = DialogTitle;
             OkButton.Content = OkButtonText;
 
@@ -45,7 +43,6 @@ namespace Spider.Views.Dialogs
                 CheckFileExists = true
             };
 
-            // Если путь уже указан, устанавливаем его как начальный
             if (!string.IsNullOrWhiteSpace(Project.DockerComposePath) && System.IO.File.Exists(Project.DockerComposePath))
             {
                 dialog.InitialDirectory = System.IO.Path.GetDirectoryName(Project.DockerComposePath);
@@ -61,7 +58,6 @@ namespace Spider.Views.Dialogs
 
         private void OkButton_Click(object sender, RoutedEventArgs e)
         {
-            // Проверяем валидность данных
             if (string.IsNullOrWhiteSpace(Project.Name))
             {
                 MessageBox.Show("Название проекта обязательно для заполнения!",
@@ -72,7 +68,6 @@ namespace Spider.Views.Dialogs
                 return;
             }
 
-            // Проверяем длину названия
             if (Project.Name.Length < 2 || Project.Name.Length > 50)
             {
                 MessageBox.Show("Название проекта должно содержать от 2 до 50 символов!",
@@ -83,7 +78,6 @@ namespace Spider.Views.Dialogs
                 return;
             }
 
-            // Проверяем путь к docker-compose файлу
             if (string.IsNullOrWhiteSpace(Project.DockerComposePath))
             {
                 MessageBox.Show("Путь к docker-compose файлу обязателен для заполнения!",
@@ -94,7 +88,6 @@ namespace Spider.Views.Dialogs
                 return;
             }
 
-            // Проверяем существование файла
             if (!System.IO.File.Exists(Project.DockerComposePath))
             {
                 var result = MessageBox.Show($"Файл '{Project.DockerComposePath}' не существует.\n\nВсё равно сохранить?",

@@ -35,8 +35,8 @@ namespace Spider.Data
         /// </summary>
         public DbSet<DockerImage> DockerImages { get; set; }
 
-        ///<summary>
-        /// Настройка подключения к базе дааных
+        /// <summary>
+        /// Настройка подключения к базе данных
         /// </summary>
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

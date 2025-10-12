@@ -147,7 +147,6 @@ namespace Spider.ViewModels
             _projects = new ObservableCollection<DockerProject>();
             _images = new ObservableCollection<DockerImageViewModel>();
 
-            // Инициализация команд
             LoadProjectsCommand = new RelayCommand(async _ => await LoadProjectsAsync());
             AddProjectCommand = new RelayCommand(_ => AddProject());
             EditProjectCommand = new RelayCommand(param => EditProject(param as DockerProject));
@@ -160,7 +159,6 @@ namespace Spider.ViewModels
             RebuildImageCommand = new RelayCommand(async param => await RebuildImageAsync(param as DockerImageViewModel), _ => CanExecuteDockerCommands);
             ClearOutputCommand = new RelayCommand(_ => BuildOutput = string.Empty);
 
-            // Загружаем проекты при создании ViewModel
             _ = LoadProjectsAsync();
         }
 
@@ -212,7 +210,6 @@ namespace Spider.ViewModels
             {
                 IsLoading = true;
 
-                // Проверяем существование docker-compose файла
                 if (!System.IO.File.Exists(SelectedProject.DockerComposePath))
                 {
                     MessageBox.Show($"Файл docker-compose не найден:\n{SelectedProject.DockerComposePath}",
@@ -222,13 +219,10 @@ namespace Spider.ViewModels
                     return;
                 }
 
-                // Получаем сервисы из docker-compose
                 var services = await ParseDockerComposeServicesAsync(SelectedProject.DockerComposePath);
 
-                // Получаем статусы контейнеров
                 var runningContainers = await GetRunningContainersAsync(SelectedProject.DockerComposePath);
 
-                // Создаем ViewModel для каждого сервиса
                 foreach (var service in services)
                 {
                     var imageViewModel = new DockerImageViewModel
@@ -270,7 +264,6 @@ namespace Spider.ViewModels
             {
                 var content = await System.IO.File.ReadAllTextAsync(composePath);
                 
-                // Простой парсинг YAML - ищем сервисы после строки "services:"
                 var lines = content.Split('\n');
                 bool inServices = false;
                 
@@ -286,13 +279,11 @@ namespace Spider.ViewModels
                     
                     if (inServices)
                     {
-                        // Если строка не с отступом или новая секция - выходим
                         if (!string.IsNullOrWhiteSpace(line) && !line.StartsWith(" ") && !line.StartsWith("\t"))
                         {
                             break;
                         }
                         
-                        // Ищем имена сервисов (строки с одним уровнем отступа и заканчивающиеся на :)
                         if (line.StartsWith("  ") && !line.StartsWith("    ") && trimmed.EndsWith(":"))
                         {
                             var serviceName = trimmed.TrimEnd(':');
@@ -615,8 +606,7 @@ namespace Spider.ViewModels
                 }
                 BuildOutput += $"═══════════════════════════════════════════════════\n\n";
 
-                // Обновляем статусы образов
-                await Task.Delay(1000); // Даем время Docker обновить статусы
+                await Task.Delay(1000);
                 await LoadProjectImagesAsync();
             }
             catch (Exception ex)

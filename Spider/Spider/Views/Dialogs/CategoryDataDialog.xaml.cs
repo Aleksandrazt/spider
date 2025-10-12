@@ -4,7 +4,7 @@ using System.Windows;
 namespace Spider.Views.Dialogs
 {
     /// <summary>
-    /// Interaction logic for CategoryDataDialog.xaml
+    /// Логика взаимодействия для CategoryDataDialog.xaml
     /// </summary>
     public partial class CategoryDataDialog : Window
     {

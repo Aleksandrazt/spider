@@ -1,0 +1,107 @@
+<Window x:Class="Spider.Views.Windows.VideoRecordControlWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Запись видео"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        Topmost="True"
+        ShowInTaskbar="False"
+        ResizeMode="NoResize"
+        SizeToContent="WidthAndHeight"
+        Loaded="Window_Loaded">
+    
+    <Window.Resources>
+        <Style x:Key="VideoControlButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="#424242"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="#666"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="4"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#555"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Background" Value="#333"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+    
+    <Border Background="#212121"
+            CornerRadius="8"
+            BorderBrush="#2196F3"
+            BorderThickness="2"
+            Padding="16,12">
+        <Border.Effect>
+            <DropShadowEffect Color="Black" BlurRadius="15" ShadowDepth="3" Opacity="0.6"/>
+        </Border.Effect>
+        
+        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+            <!-- Recording Indicator -->
+            <StackPanel Orientation="Horizontal" Margin="0,0,16,0">
+                <Ellipse x:Name="RecordingIndicator"
+                         Width="12" Height="12"
+                         Fill="#F44336"
+                         VerticalAlignment="Center"
+                         Margin="0,0,8,0">
+                    <Ellipse.Triggers>
+                        <EventTrigger RoutedEvent="Loaded">
+                            <BeginStoryboard>
+                                <Storyboard RepeatBehavior="Forever">
+                                    <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                   From="1.0" To="0.2" Duration="0:0:0.8"
+                                                   AutoReverse="True"/>
+                                </Storyboard>
+                            </BeginStoryboard>
+                        </EventTrigger>
+                    </Ellipse.Triggers>
+                </Ellipse>
+                
+                <TextBlock x:Name="RecordingTimeText"
+                           Text="00:00"
+                           Foreground="White"
+                           FontSize="14"
+                           FontFamily="Consolas"
+                           FontWeight="SemiBold"
+                           VerticalAlignment="Center"/>
+            </StackPanel>
+            
+            <!-- Separator -->
+            <Border Width="1" Background="#444" Margin="0,0,16,0"/>
+            
+            <!-- Control Buttons -->
+            <StackPanel Orientation="Horizontal">
+                <!-- Pause/Resume Button -->
+                <Button x:Name="PauseResumeButton"
+                        Content="⏸️ Пауза"
+                        Click="PauseResumeButton_Click"
+                        Style="{StaticResource VideoControlButtonStyle}"
+                        Margin="0,0,8,0"/>
+                
+                <!-- Stop Button -->
+                <Button x:Name="StopButton"
+                        Content="⏹️ Остановить"
+                        Click="StopButton_Click"
+                        Style="{StaticResource VideoControlButtonStyle}"/>
+            </StackPanel>
+        </StackPanel>
+    </Border>
+</Window>

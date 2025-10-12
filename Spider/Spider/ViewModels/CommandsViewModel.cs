@@ -48,7 +48,6 @@ namespace Spider.ViewModels
                 {
                     OnPropertyChanged(nameof(SelectedCommandName));
                     OnPropertyChanged(nameof(IsCommandSelected));
-                    // Очищаем вывод и аргументы при смене команды
                     AdditionalArguments = value?.Arguments ?? string.Empty;
                     CommandOutput = string.Empty;
                 }
@@ -169,7 +168,6 @@ namespace Spider.ViewModels
             _commandService = new CommandService();
             _commands = new ObservableCollection<Command>();
 
-            // Инициализация команд
             LoadCommandsCommand = new RelayCommand(async _ => await LoadCommandsAsync());
             AddCommandCommand = new RelayCommand(_ => AddCommand());
             EditCommandCommand = new RelayCommand(param => EditCommand(param as Command));
@@ -178,7 +176,6 @@ namespace Spider.ViewModels
             StopCommandCommand = new RelayCommand(_ => StopCommand(), _ => CanStop);
             ClearOutputCommand = new RelayCommand(_ => CommandOutput = string.Empty);
 
-            // Загружаем команды при создании ViewModel
             _ = LoadCommandsAsync();
         }
 
@@ -240,7 +237,7 @@ namespace Spider.ViewModels
             try
             {
                 await _commandService.AddCommandAsync(command);
-                await LoadCommandsAsync(); // Перезагружаем список
+                await LoadCommandsAsync();
             }
             catch (Exception ex)
             {
@@ -300,7 +297,7 @@ namespace Spider.ViewModels
                 try
                 {
                     await _commandService.DeleteCommandAsync(commandToDelete.Id);
-                    await LoadCommandsAsync(); // Перезагружаем список
+                    await LoadCommandsAsync();
                     if (SelectedCommand == commandToDelete)
                         SelectedCommand = null;
                 }
@@ -322,7 +319,7 @@ namespace Spider.ViewModels
             try
             {
                 await _commandService.UpdateCommandAsync(command);
-                await LoadCommandsAsync(); // Перезагружаем список
+                await LoadCommandsAsync();
             }
             catch (Exception ex)
             {
@@ -348,7 +345,6 @@ namespace Spider.ViewModels
             {
                 IsExecuting = true;
 
-                // Проверяем существование рабочей директории
                 if (!System.IO.Directory.Exists(SelectedCommand.FolderPath))
                 {
                     CommandOutput += $"❌ ОШИБКА: Директория '{SelectedCommand.FolderPath}' не найдена!\n\n";
@@ -356,7 +352,6 @@ namespace Spider.ViewModels
                     return;
                 }
 
-                // Формируем полную команду с аргументами
                 var fullCommand = SelectedCommand.CommandText;
                 if (!string.IsNullOrWhiteSpace(AdditionalArguments))
                 {
@@ -369,7 +364,6 @@ namespace Spider.ViewModels
                 CommandOutput += $"⚡ Команда: {fullCommand}\n";
                 CommandOutput += $"═══════════════════════════════════════════════════\n\n";
 
-                // Создаем процесс для выполнения команды
                 _currentProcess = new Process
                 {
                     StartInfo = new ProcessStartInfo
@@ -386,7 +380,6 @@ namespace Spider.ViewModels
                     }
                 };
 
-                // Обработчики вывода
                 _currentProcess.OutputDataReceived += (sender, e) =>
                 {
                     if (!string.IsNullOrEmpty(e.Data))
@@ -409,15 +402,12 @@ namespace Spider.ViewModels
                     }
                 };
 
-                // Запускаем процесс
                 _currentProcess.Start();
                 _currentProcess.BeginOutputReadLine();
                 _currentProcess.BeginErrorReadLine();
 
-                // Ждем завершения в отдельном потоке
                 await Task.Run(() => _currentProcess.WaitForExit());
 
-                // Выводим результат
                 var exitCode = _currentProcess.ExitCode;
                 CommandOutput += $"\n═══════════════════════════════════════════════════\n";
                 if (exitCode == 0)
@@ -489,7 +479,7 @@ namespace Spider.ViewModels
         /// </summary>
         public void Dispose()
         {
-            StopCommand(); // Останавливаем выполнение команды, если она запущена
+            StopCommand();
             _commandService?.Dispose();
         }
 

@@ -1,0 +1,167 @@
+<Window x:Class="Spider.Views.Dialogs.HotkeySettingsDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Настройка горячих клавиш" 
+        Height="500" 
+        Width="600"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        Background="#F5F5F5">
+
+    <Window.Resources>
+        <Style TargetType="Button">
+            <Setter Property="Padding" Value="20,10"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                                CornerRadius="6"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" 
+                                            VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#1976D2"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style TargetType="TextBox">
+            <Setter Property="Padding" Value="12"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Foreground" Value="#333"/>
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="BorderBrush" Value="#E0E0E0"/>
+            <Setter Property="Background" Value="White"/>
+            <Style.Triggers>
+                <Trigger Property="IsFocused" Value="True">
+                    <Setter Property="BorderBrush" Value="#2196F3"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style TargetType="TextBlock">
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Foreground" Value="#333"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="30">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Заголовок -->
+        <TextBlock Grid.Row="0" 
+                 FontSize="20" 
+                 FontWeight="Bold"
+                 Margin="0,0,0,30"
+                 HorizontalAlignment="Center"
+                 Foreground="#2196F3"
+                 Text="Настройка горячих клавиш"/>
+
+        <!-- Форма -->
+        <StackPanel Grid.Row="1">
+            <!-- Предупреждение -->
+            <Border Background="#FFF3CD"
+                    BorderBrush="#FFEAA7"
+                    BorderThickness="1"
+                    CornerRadius="4"
+                    Padding="15"
+                    Margin="0,0,0,20">
+                <StackPanel>
+                    <TextBlock Text="⚠️ Внимание" 
+                             FontWeight="Bold"
+                             FontSize="14"
+                             Foreground="#856404"
+                             Margin="0,0,0,5"/>
+                    <TextBlock Text="Горячие клавиши работают глобально во всей системе. Убедитесь, что выбранные комбинации не конфликтуют с другими приложениями."
+                             FontSize="12"
+                             Foreground="#856404"
+                             TextWrapping="Wrap"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Скриншот области -->
+            <StackPanel Margin="0,0,0,20">
+                <TextBlock Text="Скриншот области:" 
+                         FontWeight="SemiBold"
+                         FontSize="15"
+                         Margin="0,0,0,8"/>
+                <TextBox x:Name="ScreenshotHotkeyTextBox"
+                       IsReadOnly="True"
+                       Height="45"
+                       Text="{Binding ScreenshotHotkeyText, Mode=OneWay}"
+                       KeyDown="HotkeyTextBox_KeyDown"/>
+            </StackPanel>
+
+            <!-- Полный экран -->
+            <StackPanel Margin="0,0,0,20">
+                <TextBlock Text="Полноэкранный скриншот:" 
+                         FontWeight="SemiBold"
+                         FontSize="15"
+                         Margin="0,0,0,8"/>
+                <TextBox x:Name="FullScreenshotHotkeyTextBox"
+                       IsReadOnly="True"
+                       Height="45"
+                       Text="{Binding FullScreenshotHotkeyText, Mode=OneWay}"
+                       KeyDown="HotkeyTextBox_KeyDown"/>
+            </StackPanel>
+
+            <!-- Запись видео -->
+            <StackPanel Margin="0,0,0,20">
+                <TextBlock Text="Запись видео:" 
+                         FontWeight="SemiBold"
+                         FontSize="15"
+                         Margin="0,0,0,8"/>
+                <TextBox x:Name="VideoRecordHotkeyTextBox"
+                       IsReadOnly="True"
+                       Height="45"
+                       Text="{Binding VideoRecordHotkeyText, Mode=OneWay}"
+                       KeyDown="HotkeyTextBox_KeyDown"/>
+            </StackPanel>
+
+            <!-- Сброс к умолчаниям -->
+            <Button Content="🔄 Сбросить к умолчаниям" 
+                    Background="#607D8B"
+                    Foreground="White"
+                    HorizontalAlignment="Left"
+                    Click="ResetToDefaults_Click"/>
+        </StackPanel>
+
+        <!-- Кнопки -->
+        <Grid Grid.Row="2" 
+              Margin="0,30,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="20"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Button Grid.Column="0"
+                  Content="Отмена" 
+                  Background="#757575"
+                  Foreground="White"
+                  Click="CancelButton_Click"/>
+
+            <Button Grid.Column="2"
+                  x:Name="OkButton"
+                  Content="Сохранить"
+                  Background="#4CAF50"
+                  Foreground="White"
+                  Click="OkButton_Click"/>
+        </Grid>
+    </Grid>
+</Window>
+

@@ -867,11 +867,259 @@
             <!-- Вкладка 4: Скриншоты -->
             <TabItem Header="📸 Скриншоты">
                 <Grid Margin="10">
-                    <TextBlock Text="Вкладка скриншотов (создадим на следующем шаге)" 
-                             FontSize="18" 
-                             HorizontalAlignment="Center" 
-                             VerticalAlignment="Center"
-                             Foreground="#999"/>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Панель действий -->
+                    <Border Grid.Row="0" 
+                            BorderBrush="#E0E0E0" 
+                            BorderThickness="1" 
+                            CornerRadius="4"
+                            Margin="0,0,0,10"
+                            Padding="15">
+                        <StackPanel>
+                            <!-- Заголовок -->
+                            <TextBlock Text="Быстрые действия" 
+                                     FontSize="16" 
+                                     FontWeight="Bold"
+                                     Margin="0,0,0,15"
+                                     Foreground="#333"/>
+                            
+                            <!-- Кнопки действий -->
+                            <WrapPanel>
+                                <Button x:Name="TakeScreenshotButton"
+                                      Content="📸 Сделать скриншот"
+                                      Style="{StaticResource PrimaryButton}"
+                                      Background="#4CAF50"
+                                      Margin="0,0,10,10"
+                                      Padding="20,15"
+                                      FontSize="15"/>
+                                <Button x:Name="TakeFullScreenshotButton"
+                                      Content="🖵 Полный экран"
+                                      Style="{StaticResource PrimaryButton}"
+                                      Background="#2196F3"
+                                      Margin="0,0,10,10"
+                                      Padding="20,15"
+                                      FontSize="15"/>
+                                <Button x:Name="StartStopRecordingButton"
+                                      Content="⏺️ Начать запись"
+                                      Style="{StaticResource PrimaryButton}"
+                                      Background="#F44336"
+                                      Margin="0,0,10,10"
+                                      Padding="20,15"
+                                      FontSize="15"/>
+                            </WrapPanel>
+                            
+                            <!-- Статус -->
+                            <Border Background="#F5F5F5"
+                                  BorderBrush="#E0E0E0"
+                                  BorderThickness="1"
+                                  CornerRadius="4"
+                                  Padding="10"
+                                  Margin="0,10,0,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Статус: " 
+                                             FontWeight="SemiBold"
+                                             Foreground="#666"/>
+                                    <TextBlock x:Name="ScreenshotStatusText"
+                                             Text="Готов к работе"
+                                             Foreground="#4CAF50"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Настройки -->
+                    <Border Grid.Row="1" 
+                            BorderBrush="#E0E0E0" 
+                            BorderThickness="1" 
+                            CornerRadius="4"
+                            Padding="15">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <StackPanel>
+                                <!-- Заголовок настроек -->
+                                <TextBlock Text="Настройки" 
+                                         FontSize="16" 
+                                         FontWeight="Bold"
+                                         Margin="0,0,0,15"
+                                         Foreground="#333"/>
+
+                                <!-- Пути сохранения -->
+                                <GroupBox Header="Пути сохранения" 
+                                        Margin="0,0,0,15"
+                                        Padding="10">
+                                    <StackPanel>
+                                        <!-- Папка скриншотов -->
+                                        <StackPanel Margin="0,0,0,10">
+                                            <TextBlock Text="Папка для скриншотов:" 
+                                                     FontWeight="SemiBold"
+                                                     Margin="0,0,0,5"/>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBox x:Name="ScreenshotPathTextBox"
+                                                       Grid.Column="0"
+                                                       IsReadOnly="True"
+                                                       Padding="8"
+                                                       VerticalContentAlignment="Center"/>
+                                                <Button Grid.Column="1"
+                                                      x:Name="SelectScreenshotFolderButton"
+                                                      Content="📁 Обзор"
+                                                      Style="{StaticResource PrimaryButton}"
+                                                      Background="#607D8B"
+                                                      Margin="5,0,0,0"/>
+                                                <Button Grid.Column="2"
+                                                      x:Name="OpenScreenshotFolderButton"
+                                                      Content="🔍 Открыть"
+                                                      Style="{StaticResource PrimaryButton}"
+                                                      Background="#9E9E9E"
+                                                      Margin="5,0,0,0"/>
+                                            </Grid>
+                                        </StackPanel>
+
+                                        <!-- Папка видео -->
+                                        <StackPanel>
+                                            <TextBlock Text="Папка для видео:" 
+                                                     FontWeight="SemiBold"
+                                                     Margin="0,0,0,5"/>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBox x:Name="VideoPathTextBox"
+                                                       Grid.Column="0"
+                                                       IsReadOnly="True"
+                                                       Padding="8"
+                                                       VerticalContentAlignment="Center"/>
+                                                <Button Grid.Column="1"
+                                                      x:Name="SelectVideoFolderButton"
+                                                      Content="📁 Обзор"
+                                                      Style="{StaticResource PrimaryButton}"
+                                                      Background="#607D8B"
+                                                      Margin="5,0,0,0"/>
+                                                <Button Grid.Column="2"
+                                                      x:Name="OpenVideoFolderButton"
+                                                      Content="🔍 Открыть"
+                                                      Style="{StaticResource PrimaryButton}"
+                                                      Background="#9E9E9E"
+                                                      Margin="5,0,0,0"/>
+                                            </Grid>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </GroupBox>
+
+                                <!-- Параметры сохранения -->
+                                <GroupBox Header="Параметры сохранения" 
+                                        Margin="0,0,0,15"
+                                        Padding="10">
+                                    <StackPanel>
+                                        <CheckBox x:Name="SaveToFileCheckBox"
+                                                Content="Сохранять в файл"
+                                                IsChecked="True"
+                                                Margin="0,0,0,5"/>
+                                        <CheckBox x:Name="CopyToClipboardCheckBox"
+                                                Content="Копировать в буфер обмена"
+                                                IsChecked="True"
+                                                Margin="0,0,0,10"/>
+                                        
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                                            <TextBlock Text="Формат изображения:" 
+                                                     FontWeight="SemiBold"
+                                                     VerticalAlignment="Center"
+                                                     Margin="0,0,10,0"/>
+                                            <ComboBox x:Name="ImageFormatComboBox"
+                                                    Width="100"
+                                                    SelectedIndex="0">
+                                                <ComboBoxItem Content="PNG"/>
+                                                <ComboBoxItem Content="JPEG"/>
+                                                <ComboBoxItem Content="BMP"/>
+                                            </ComboBox>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </GroupBox>
+
+                                <!-- Горячие клавиши -->
+                                <GroupBox Header="Горячие клавиши" 
+                                        Margin="0,0,0,15"
+                                        Padding="10">
+                                    <StackPanel>
+                                        <StackPanel Orientation="Horizontal" 
+                                                  Margin="0,0,0,10">
+                                            <TextBlock Text="⚠️ Горячие клавиши работают глобально во всей системе"
+                                                     FontSize="11"
+                                                     Foreground="#FF9800"
+                                                     VerticalAlignment="Center"
+                                                     TextWrapping="Wrap"/>
+                                            <Button Content="⚙️ Настроить"
+                                                  Background="#FF9800"
+                                                  Foreground="White"
+                                                  Padding="10,5"
+                                                  Margin="10,0,0,0"
+                                                  x:Name="ConfigureHotkeysButton"
+                                                  Style="{StaticResource PrimaryButton}"/>
+                                        </StackPanel>
+                                        
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+                                            
+                                            <TextBlock Grid.Row="0" Grid.Column="0"
+                                                     Text="Скриншот области:"
+                                                     VerticalAlignment="Center"
+                                                     Margin="0,0,10,5"/>
+                                            <TextBox Grid.Row="0" Grid.Column="1"
+                                                   x:Name="ScreenshotHotkeyTextBox"
+                                                   IsReadOnly="True"
+                                                   Padding="8"
+                                                   Margin="0,0,0,5"/>
+                                            
+                                            <TextBlock Grid.Row="1" Grid.Column="0"
+                                                     Text="Полный экран:"
+                                                     VerticalAlignment="Center"
+                                                     Margin="0,0,10,5"/>
+                                            <TextBox Grid.Row="1" Grid.Column="1"
+                                                   x:Name="FullScreenshotHotkeyTextBox"
+                                                   IsReadOnly="True"
+                                                   Padding="8"
+                                                   Margin="0,0,0,5"/>
+                                            
+                                            <TextBlock Grid.Row="2" Grid.Column="0"
+                                                     Text="Запись видео:"
+                                                     VerticalAlignment="Center"
+                                                     Margin="0,0,10,5"/>
+                                            <TextBox Grid.Row="2" Grid.Column="1"
+                                                   x:Name="VideoRecordHotkeyTextBox"
+                                                   IsReadOnly="True"
+                                                   Padding="8"/>
+                                        </Grid>
+                                    </StackPanel>
+                                </GroupBox>
+
+                                <!-- Кнопка сохранения -->
+                                <Button x:Name="SaveScreenshotSettingsButton"
+                                      Content="💾 Сохранить настройки"
+                                      Style="{StaticResource PrimaryButton}"
+                                      Background="#4CAF50"
+                                      HorizontalAlignment="Left"
+                                      Padding="30,12"
+                                      FontSize="14"/>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Border>
                 </Grid>
             </TabItem>
 
