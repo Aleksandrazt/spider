@@ -329,11 +329,242 @@
             <!-- Вкладка 2: Команды -->
             <TabItem Header="⚡ Команды">
                 <Grid Margin="10">
-                    <TextBlock Text="Вкладка команд (создадим на следующем шаге)" 
-                             FontSize="18" 
-                             HorizontalAlignment="Center" 
-                             VerticalAlignment="Center"
-                             Foreground="#999"/>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="300"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Левая панель: список команд -->
+                    <Border Grid.Column="0" 
+                            BorderBrush="#E0E0E0" 
+                            BorderThickness="1" 
+                            CornerRadius="4"
+                            Margin="0,0,10,0">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- Заголовок -->
+                            <TextBlock Grid.Row="0" 
+                                     Text="Команды" 
+                                     FontSize="16" 
+                                     FontWeight="Bold"
+                                     Margin="10"
+                                     Foreground="#333"/>
+
+                            <!-- Список команд с кнопками -->
+                            <ListBox Grid.Row="1" 
+                                   x:Name="CommandsListBox"
+                                   Margin="10,0"
+                                   BorderThickness="0"
+                                   ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+
+                                <!-- Стиль для контейнера элементов списка -->
+                                <ListBox.ItemContainerStyle>
+                                    <Style TargetType="ListBoxItem">
+                                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                        <Setter Property="Padding" Value="0"/>
+                                        <Setter Property="Margin" Value="0"/>
+                                    </Style>
+                                </ListBox.ItemContainerStyle>
+
+                                <!-- Шаблон элемента списка -->
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border BorderBrush="#E0E0E0" 
+                                              BorderThickness="0,0,0,1" 
+                                              Padding="10,8">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="64"/>
+                                                </Grid.ColumnDefinitions>
+
+                                                <!-- Название команды -->
+                                                <StackPanel Grid.Column="0" 
+                                                          Margin="0,0,10,0">
+                                                    <TextBlock Text="{Binding Name}" 
+                                                             FontWeight="SemiBold"
+                                                             FontSize="13"
+                                                             Foreground="#333"
+                                                             TextTrimming="CharacterEllipsis"/>
+                                                    <TextBlock Text="{Binding CommandText}" 
+                                                             FontSize="11"
+                                                             Foreground="#666"
+                                                             TextTrimming="CharacterEllipsis"/>
+                                                </StackPanel>
+
+                                                <!-- Кнопки действий -->
+                                                <StackPanel Grid.Column="1" 
+                                                          Orientation="Horizontal"
+                                                          VerticalAlignment="Center"
+                                                          HorizontalAlignment="Right">
+                                                    <Button Content="✏️" 
+                                                          Style="{StaticResource SmallButton}"
+                                                          Background="#FF9800"
+                                                          Foreground="White"
+                                                          Width="28" Height="24"
+                                                          Margin="2"
+                                                          ToolTip="Редактировать"
+                                                          Tag="{Binding}"
+                                                          Command="{Binding DataContext.EditCommandCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                          CommandParameter="{Binding}"/>
+                                                    <Button Content="🗑️" 
+                                                          Style="{StaticResource SmallButton}"
+                                                          Background="#F44336"
+                                                          Foreground="White"
+                                                          Width="28" Height="24"
+                                                          Margin="2"
+                                                          ToolTip="Удалить"
+                                                          Tag="{Binding}"
+                                                          Command="{Binding DataContext.DeleteCommandCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                          CommandParameter="{Binding}"/>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+
+                            <!-- Большая кнопка "Добавить команду" -->
+                            <Button Grid.Row="2" 
+                                  Content="➕ Добавить команду" 
+                                  Style="{StaticResource AddButton}"
+                                  Margin="10"
+                                  x:Name="AddCommandButton"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Правая панель: выполнение команды -->
+                    <Border Grid.Column="1" 
+                            BorderBrush="#E0E0E0" 
+                            BorderThickness="1" 
+                            CornerRadius="4">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- Заголовок с названием выбранной команды -->
+                            <StackPanel Grid.Row="0" 
+                                      Orientation="Horizontal"
+                                      Margin="10">
+                                <TextBlock Text="Команда: " 
+                                         FontSize="16" 
+                                         FontWeight="Bold"
+                                         Foreground="#333"/>
+                                <TextBlock x:Name="SelectedCommandName" 
+                                         Text="(выберите команду)" 
+                                         FontSize="16" 
+                                         FontWeight="SemiBold"
+                                         Foreground="#2196F3"/>
+                            </StackPanel>
+
+                            <!-- Панель с аргументами и кнопками управления -->
+                            <Grid Grid.Row="1" 
+                                  Margin="10,0,10,10"
+                                  x:Name="CommandControlPanel"
+                                  Visibility="Collapsed">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <!-- Поле для дополнительных аргументов -->
+                                <StackPanel Grid.Row="0" Margin="0,0,0,10">
+                                    <TextBlock Text="Дополнительные аргументы:" 
+                                             FontSize="13"
+                                             FontWeight="SemiBold"
+                                             Margin="0,0,0,5"
+                                             Foreground="#333"/>
+                                    <TextBox x:Name="AdditionalArgumentsTextBox"
+                                           Height="40"
+                                           Padding="10"
+                                           FontSize="13"
+                                           VerticalContentAlignment="Center"
+                                           BorderBrush="#E0E0E0"
+                                           BorderThickness="2"/>
+                                </StackPanel>
+
+                                <!-- Кнопки управления -->
+                                <StackPanel Grid.Row="1" 
+                                          Orientation="Horizontal"
+                                          HorizontalAlignment="Left">
+                                    <Button x:Name="ExecuteCommandButton"
+                                          Content="▶️ Запустить" 
+                                          Style="{StaticResource PrimaryButton}"
+                                          Background="#4CAF50"
+                                          Margin="0,0,10,0"/>
+                                    <Button x:Name="StopCommandButton"
+                                          Content="⛔ Остановить" 
+                                          Style="{StaticResource PrimaryButton}"
+                                          Background="#F44336"
+                                          Margin="0,0,10,0"
+                                          IsEnabled="False"/>
+                                    <Button x:Name="ClearOutputButton"
+                                          Content="🗑️ Очистить вывод" 
+                                          Style="{StaticResource PrimaryButton}"
+                                          Background="#607D8B"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <!-- Область вывода команды или сообщение о выборе -->
+                            <Grid Grid.Row="2" Margin="10">
+                                <!-- TextBox для вывода команды -->
+                                <Border x:Name="OutputArea"
+                                      Background="#1E1E1E"
+                                      CornerRadius="4"
+                                      Visibility="Collapsed">
+                                    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                                HorizontalScrollBarVisibility="Auto">
+                                        <TextBox x:Name="CommandOutputTextBox"
+                                               IsReadOnly="True"
+                                               Background="Transparent"
+                                               Foreground="#D4D4D4"
+                                               FontFamily="Consolas"
+                                               FontSize="12"
+                                               BorderThickness="0"
+                                               Padding="15"
+                                               TextWrapping="NoWrap"
+                                               VerticalScrollBarVisibility="Auto"
+                                               HorizontalScrollBarVisibility="Auto"/>
+                                    </ScrollViewer>
+                                </Border>
+
+                                <!-- Сообщение когда команда не выбрана -->
+                                <Border x:Name="NoCommandMessage"
+                                      Background="#F8F9FA"
+                                      BorderBrush="#E9ECEF"
+                                      BorderThickness="1"
+                                      CornerRadius="8"
+                                      Padding="40,60"
+                                      Visibility="Visible">
+                                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                        <TextBlock Text="⚡" 
+                                                 FontSize="48" 
+                                                 HorizontalAlignment="Center"
+                                                 Margin="0,0,0,16"
+                                                 Foreground="#6C757D"/>
+                                        <TextBlock Text="Выберите команду" 
+                                                 FontSize="18" 
+                                                 FontWeight="SemiBold"
+                                                 HorizontalAlignment="Center"
+                                                 Margin="0,0,0,8"
+                                                 Foreground="#495057"/>
+                                        <TextBlock Text="для запуска и просмотра вывода" 
+                                                 FontSize="14" 
+                                                 HorizontalAlignment="Center"
+                                                 Foreground="#6C757D"/>
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+                        </Grid>
+                    </Border>
                 </Grid>
             </TabItem>
 
