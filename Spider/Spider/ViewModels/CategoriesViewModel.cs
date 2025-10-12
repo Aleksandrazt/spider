@@ -1,10 +1,12 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Windows;
 using System.Windows.Input;
 using Spider.Helpers;
 using Spider.Models;
 using Spider.Services;
+using Spider.Views.Dialogs;
 
 namespace Spider.ViewModels
 {
@@ -134,11 +136,11 @@ namespace Spider.ViewModels
             // Инициализация команд
             LoadCategoriesCommand = new RelayCommand(async _ => await LoadCategoriesAsync());
             AddCategoryCommand = new RelayCommand(_ => AddCategory());
-            EditCategoryCommand = new RelayCommand(_ => EditCategory());
-            DeleteCategoryCommand = new RelayCommand(_ => DeleteCategory());
+            EditCategoryCommand = new RelayCommand(param => EditCategory(param as Category));
+            DeleteCategoryCommand = new RelayCommand(param => DeleteCategory(param as Category));
             AddCategoryDataCommand = new RelayCommand(_ => AddCategoryData(), _ => SelectedCategory != null);
-            EditCategoryDataCommand = new RelayCommand(_ => EditCategoryData());
-            DeleteCategoryDataCommand = new RelayCommand(_ => DeleteCategoryData());
+            EditCategoryDataCommand = new RelayCommand(param => EditCategoryData(param as CategoryData));
+            DeleteCategoryDataCommand = new RelayCommand(param => DeleteCategoryData(param as CategoryData));
 
             // Загружаем категории при создании ViewModel
             _ = LoadCategoriesAsync();
@@ -217,47 +219,92 @@ namespace Spider.ViewModels
         /// </summary>
         private void AddCategory()
         {
-            // TODO: Открыть диалоговое окно для добавления категории
-            System.Diagnostics.Debug.WriteLine("Добавление новой категории");
+            var dialog = new CategoryDialog();
+            if (dialog.ShowDialog() == true)
+            {
+                _ = AddCategoryAsync(dialog.Category);
+            }
+        }
+
+        /// <summary>
+        /// Асинхронное добавление категории
+        /// </summary>
+        private async Task AddCategoryAsync(Category category)
+        {
+            try
+            {
+                await _categoryService.AddCategoryAsync(category);
+                await LoadCategoriesAsync(); // Перезагружаем список
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка при добавлении категории:\n{ex.Message}",
+                              "Ошибка",
+                              MessageBoxButton.OK,
+                              MessageBoxImage.Error);
+            }
         }
 
         /// <summary>
         /// Редактирование выбранной категории
         /// </summary>
-        private void EditCategory()
+        private void EditCategory(Category? category = null)
         {
-            if (SelectedCategory == null)
+            var categoryToEdit = category ?? SelectedCategory;
+            
+            if (categoryToEdit == null)
             {
-                // TODO: Показать сообщение пользователю
+                MessageBox.Show("Выберите категорию для редактирования!", 
+                              "Внимание", 
+                              MessageBoxButton.OK, 
+                              MessageBoxImage.Information);
                 return;
             }
 
-            // TODO: Открыть диалоговое окно для редактирования категории
-            System.Diagnostics.Debug.WriteLine($"Редактирование категории: {SelectedCategory.Name}");
+            var dialog = new CategoryDialog(categoryToEdit);
+            if (dialog.ShowDialog() == true)
+            {
+                _ = UpdateCategoryAsync(dialog.Category);
+            }
         }
 
         /// <summary>
         /// Удаление выбранной категории
         /// </summary>
-        private async void DeleteCategory()
+        private async void DeleteCategory(Category? category = null)
         {
-            if (SelectedCategory == null)
+            var categoryToDelete = category ?? SelectedCategory;
+            
+            if (categoryToDelete == null)
             {
-                // TODO: Показать сообщение пользователю
+                MessageBox.Show("Выберите категорию для удаления!", 
+                              "Внимание", 
+                              MessageBoxButton.OK, 
+                              MessageBoxImage.Information);
                 return;
             }
 
-            // TODO: Показать подтверждение удаления
-            try
+            var result = MessageBox.Show($"Вы уверены, что хотите удалить категорию '{categoryToDelete.Name}'?\n\nВсе данные в этой категории также будут удалены!", 
+                               "Подтверждение удаления", 
+                               MessageBoxButton.YesNo, 
+                               MessageBoxImage.Question);
+            
+            if (result == MessageBoxResult.Yes)
             {
-                await _categoryService.DeleteCategoryAsync(SelectedCategory.Id);
-                await LoadCategoriesAsync(); // Перезагружаем список
-                SelectedCategory = null;
-            }
-            catch (Exception ex)
-            {
-                // TODO: Показать ошибку пользователю
-                System.Diagnostics.Debug.WriteLine($"Ошибка удаления категории: {ex.Message}");
+                try
+                {
+                    await _categoryService.DeleteCategoryAsync(categoryToDelete.Id);
+                    await LoadCategoriesAsync(); // Перезагружаем список
+                    if (SelectedCategory == categoryToDelete)
+                        SelectedCategory = null;
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Ошибка при удалении категории:\n{ex.Message}", 
+                                  "Ошибка", 
+                                  MessageBoxButton.OK, 
+                                  MessageBoxImage.Error);
+                }
             }
         }
 
@@ -268,46 +315,139 @@ namespace Spider.ViewModels
         {
             if (SelectedCategory == null) return;
 
-            // TODO: Открыть диалоговое окно для добавления данных
-            System.Diagnostics.Debug.WriteLine($"Добавление данных в категорию: {SelectedCategory.Name}");
+            var dialog = new CategoryDataDialog(SelectedCategory);
+            if (dialog.ShowDialog() == true)
+            {
+                _ = AddCategoryDataAsync(dialog.CategoryData);
+            }
         }
 
         /// <summary>
         /// Редактирование выбранных данных категории
         /// </summary>
-        private void EditCategoryData()
+        private void EditCategoryData(CategoryData? categoryData = null)
         {
-            if (SelectedCategoryData == null)
+            var dataToEdit = categoryData ?? SelectedCategoryData;
+            
+            if (dataToEdit == null)
             {
-                // TODO: Показать сообщение пользователю
+                MessageBox.Show("Выберите данные для редактирования!", 
+                              "Внимание", 
+                              MessageBoxButton.OK, 
+                              MessageBoxImage.Information);
                 return;
             }
 
-            // TODO: Открыть диалоговое окно для редактирования данных
-            System.Diagnostics.Debug.WriteLine($"Редактирование данных: {SelectedCategoryData.Name}");
+            if (SelectedCategory == null)
+            {
+                MessageBox.Show("Сначала выберите категорию!", 
+                              "Внимание", 
+                              MessageBoxButton.OK, 
+                              MessageBoxImage.Information);
+                return;
+            }
+
+            var dialog = new CategoryDataDialog(SelectedCategory, dataToEdit);
+            if (dialog.ShowDialog() == true)
+            {
+                _ = UpdateCategoryDataAsync(dialog.CategoryData);
+            }
         }
 
         /// <summary>
         /// Удаление выбранных данных категории
         /// </summary>
-        private async void DeleteCategoryData()
+        private async void DeleteCategoryData(CategoryData? categoryData = null)
         {
-            if (SelectedCategoryData == null)
+            var dataToDelete = categoryData ?? SelectedCategoryData;
+            
+            if (dataToDelete == null)
             {
-                // TODO: Показать сообщение пользователю
+                MessageBox.Show("Выберите данные для удаления!", 
+                              "Внимание", 
+                              MessageBoxButton.OK, 
+                              MessageBoxImage.Information);
                 return;
             }
 
-            // TODO: Показать подтверждение удаления
+            var result = MessageBox.Show($"Вы уверены, что хотите удалить данные '{dataToDelete.Name}'?", 
+                               "Подтверждение удаления", 
+                               MessageBoxButton.YesNo, 
+                               MessageBoxImage.Question);
+            
+            if (result == MessageBoxResult.Yes)
+            {
+                try
+                {
+                    await _categoryService.DeleteCategoryDataAsync(dataToDelete.Id);
+                    await LoadCategoryDataAsync(); // Перезагружаем данные
+                    if (SelectedCategoryData == dataToDelete)
+                        SelectedCategoryData = null;
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Ошибка при удалении данных:\n{ex.Message}", 
+                                  "Ошибка", 
+                                  MessageBoxButton.OK, 
+                                  MessageBoxImage.Error);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Асинхронное обновление категории
+        /// </summary>
+        private async Task UpdateCategoryAsync(Category category)
+        {
             try
             {
-                await _categoryService.DeleteCategoryDataAsync(SelectedCategoryData.Id);
+                await _categoryService.UpdateCategoryAsync(category);
+                await LoadCategoriesAsync(); // Перезагружаем список
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка при обновлении категории:\n{ex.Message}", 
+                              "Ошибка", 
+                              MessageBoxButton.OK, 
+                              MessageBoxImage.Error);
+            }
+        }
+
+        /// <summary>
+        /// Асинхронное добавление данных категории
+        /// </summary>
+        private async Task AddCategoryDataAsync(CategoryData categoryData)
+        {
+            try
+            {
+                await _categoryService.AddCategoryDataAsync(categoryData);
                 await LoadCategoryDataAsync(); // Перезагружаем данные
             }
             catch (Exception ex)
             {
-                // TODO: Показать ошибку пользователю
-                System.Diagnostics.Debug.WriteLine($"Ошибка удаления данных: {ex.Message}");
+                MessageBox.Show($"Ошибка при добавлении данных:\n{ex.Message}", 
+                              "Ошибка", 
+                              MessageBoxButton.OK, 
+                              MessageBoxImage.Error);
+            }
+        }
+
+        /// <summary>
+        /// Асинхронное обновление данных категории
+        /// </summary>
+        private async Task UpdateCategoryDataAsync(CategoryData categoryData)
+        {
+            try
+            {
+                await _categoryService.UpdateCategoryDataAsync(categoryData);
+                await LoadCategoryDataAsync(); // Перезагружаем данные
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка при обновлении данных:\n{ex.Message}", 
+                              "Ошибка", 
+                              MessageBoxButton.OK, 
+                              MessageBoxImage.Error);
             }
         }
 

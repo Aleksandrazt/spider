@@ -136,6 +136,15 @@
                                    BorderThickness="0"
                                    ScrollViewer.HorizontalScrollBarVisibility="Disabled">
 
+                                <!-- Стиль для контейнера элементов списка -->
+                                <ListBox.ItemContainerStyle>
+                                    <Style TargetType="ListBoxItem">
+                                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                        <Setter Property="Padding" Value="0"/>
+                                        <Setter Property="Margin" Value="0"/>
+                                    </Style>
+                                </ListBox.ItemContainerStyle>
+
                                 <!-- Шаблон элемента списка -->
                                 <ListBox.ItemTemplate>
                                     <DataTemplate>
@@ -145,15 +154,17 @@
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="64"/>
                                                 </Grid.ColumnDefinitions>
 
                                                 <!-- Название категории -->
-                                                <StackPanel Grid.Column="0">
+                                                <StackPanel Grid.Column="0" 
+                                                          Margin="0,0,10,0">
                                                     <TextBlock Text="{Binding Name}" 
                                                              FontWeight="SemiBold"
                                                              FontSize="13"
-                                                             Foreground="#333"/>
+                                                             Foreground="#333"
+                                                             TextTrimming="CharacterEllipsis"/>
                                                     <TextBlock Text="{Binding Description}" 
                                                              FontSize="11"
                                                              Foreground="#666"
@@ -163,7 +174,8 @@
                                                 <!-- Кнопки действий -->
                                                 <StackPanel Grid.Column="1" 
                                                           Orientation="Horizontal"
-                                                          VerticalAlignment="Center">
+                                                          VerticalAlignment="Center"
+                                                          HorizontalAlignment="Right">
                                                     <Button Content="✏️" 
                                                           Style="{StaticResource SmallButton}"
                                                           Background="#FF9800"
@@ -227,52 +239,80 @@
                                          Foreground="#2196F3"/>
                             </StackPanel>
 
-                            <!-- DataGrid с данными -->
-                            <DataGrid Grid.Row="1" 
-                                    x:Name="CategoryDataGrid"
-                                    Margin="10,0"
-                                    AutoGenerateColumns="False"
-                                    CanUserAddRows="False"
-                                    HeadersVisibility="Column"
-                                    GridLinesVisibility="Horizontal">
-                                <DataGrid.Columns>
-                                    <DataGridTextColumn Header="Название" 
-                                                      Binding="{Binding Name}" 
-                                                      Width="*"/>
-                                    <DataGridTextColumn Header="Значение" 
-                                                      Binding="{Binding Value}" 
-                                                      Width="2*"/>
-                                    <DataGridTemplateColumn Header="Действия" Width="120">
-                                        <DataGridTemplateColumn.CellTemplate>
-                                            <DataTemplate>
-                                                <StackPanel Orientation="Horizontal" 
-                                                          HorizontalAlignment="Center">
-                                                    <Button Content="✏️" 
-                                                          Style="{StaticResource SmallButton}"
-                                                          Background="#FF9800"
-                                                          Foreground="White"
-                                                          Width="28" Height="24"
-                                                          Margin="2"
-                                                          ToolTip="Редактировать"
-                                                          Tag="{Binding}"
-                                                          Command="{Binding DataContext.EditCategoryCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                          CommandParameter="{Binding}"/>
-                                                    <Button Content="🗑️" 
-                                                          Style="{StaticResource SmallButton}"
-                                                          Background="#F44336"
-                                                          Foreground="White"
-                                                          Width="28" Height="24"
-                                                          Margin="2"
-                                                          ToolTip="Удалить"
-                                                          Tag="{Binding}"
-                                                          Command="{Binding DataContext.DeleteCategoryCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                          CommandParameter="{Binding}"/>
-                                                </StackPanel>
-                                            </DataTemplate>
-                                        </DataGridTemplateColumn.CellTemplate>
-                                    </DataGridTemplateColumn>
-                                </DataGrid.Columns>
-                            </DataGrid>
+                            <!-- DataGrid с данными или сообщение о выборе категории -->
+                            <Grid Grid.Row="1" Margin="10,0">
+                                <!-- DataGrid с данными -->
+                                <DataGrid x:Name="CategoryDataGrid"
+                                        AutoGenerateColumns="False"
+                                        CanUserAddRows="False"
+                                        HeadersVisibility="Column"
+                                        GridLinesVisibility="Horizontal">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Название" 
+                                                          Binding="{Binding Name}" 
+                                                          Width="*"/>
+                                        <DataGridTextColumn Header="Значение" 
+                                                          Binding="{Binding Value}" 
+                                                          Width="2*"/>
+                                        <DataGridTemplateColumn Header="Действия" Width="120">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <StackPanel Orientation="Horizontal" 
+                                                              HorizontalAlignment="Center">
+                                                        <Button Content="✏️" 
+                                                              Style="{StaticResource SmallButton}"
+                                                              Background="#FF9800"
+                                                              Foreground="White"
+                                                              Width="28" Height="24"
+                                                              Margin="2"
+                                                              ToolTip="Редактировать"
+                                                              Tag="{Binding}"
+                                                              Command="{Binding DataContext.EditCategoryDataCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                              CommandParameter="{Binding}"/>
+                                                        <Button Content="🗑️" 
+                                                              Style="{StaticResource SmallButton}"
+                                                              Background="#F44336"
+                                                              Foreground="White"
+                                                              Width="28" Height="24"
+                                                              Margin="2"
+                                                              ToolTip="Удалить"
+                                                              Tag="{Binding}"
+                                                              Command="{Binding DataContext.DeleteCategoryDataCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                              CommandParameter="{Binding}"/>
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+
+                                <!-- Сообщение когда категория не выбрана -->
+                                <Border x:Name="NoCategoryMessage"
+                                      Background="#F8F9FA"
+                                      BorderBrush="#E9ECEF"
+                                      BorderThickness="1"
+                                      CornerRadius="8"
+                                      Padding="40,60"
+                                      Visibility="Visible">
+                                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                        <TextBlock Text="📁" 
+                                                 FontSize="48" 
+                                                 HorizontalAlignment="Center"
+                                                 Margin="0,0,0,16"
+                                                 Foreground="#6C757D"/>
+                                        <TextBlock Text="Выберите категорию" 
+                                                 FontSize="18" 
+                                                 FontWeight="SemiBold"
+                                                 HorizontalAlignment="Center"
+                                                 Margin="0,0,0,8"
+                                                 Foreground="#495057"/>
+                                        <TextBlock Text="для просмотра и управления данными" 
+                                                 FontSize="14" 
+                                                 HorizontalAlignment="Center"
+                                                 Foreground="#6C757D"/>
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
 
                             <!-- Большая кнопка "Добавить данные" -->
                             <Button Grid.Row="2" 
@@ -280,7 +320,7 @@
                                   Style="{StaticResource AddButton}"
                                   Margin="10"
                                   x:Name="AddCategoryDataButton"
-                                  IsEnabled="False"/>
+                                  Visibility="Collapsed"/>
                         </Grid>
                     </Border>
                 </Grid>

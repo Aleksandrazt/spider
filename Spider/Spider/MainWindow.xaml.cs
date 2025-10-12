@@ -27,7 +27,24 @@ namespace Spider
             // Привязываем выбранные элементы
             CategoriesListBox.SelectionChanged += (s, e) =>
             {
-                _categoriesViewModel.SelectedCategory = CategoriesListBox.SelectedItem as Models.Category;
+                var selectedCategory = CategoriesListBox.SelectedItem as Models.Category;
+                _categoriesViewModel.SelectedCategory = selectedCategory;
+                
+                // Управляем видимостью элементов в правой панели
+                if (selectedCategory != null)
+                {
+                    SelectedCategoryName.Text = selectedCategory.Name;
+                    CategoryDataGrid.Visibility = Visibility.Visible;
+                    NoCategoryMessage.Visibility = Visibility.Collapsed;
+                    AddCategoryDataButton.Visibility = Visibility.Visible;
+                }
+                else
+                {
+                    SelectedCategoryName.Text = "(выберите категорию)";
+                    CategoryDataGrid.Visibility = Visibility.Collapsed;
+                    NoCategoryMessage.Visibility = Visibility.Visible;
+                    AddCategoryDataButton.Visibility = Visibility.Collapsed;
+                }
             };
 
             CategoryDataGrid.SelectionChanged += (s, e) =>
@@ -38,6 +55,15 @@ namespace Spider
             // Привязываем команды к кнопкам
             AddCategoryButton.Command = _categoriesViewModel.AddCategoryCommand;
             AddCategoryDataButton.Command = _categoriesViewModel.AddCategoryDataCommand;
+            
+            // Инициализируем состояние кнопки "Добавить данные"
+            AddCategoryDataButton.Visibility = Visibility.Collapsed;
+            
+            // Привязываем команды к кнопкам в ListBox (категории)
+            // Команды уже привязаны через XAML с RelativeSource
+            
+            // Привязываем команды к кнопкам в DataGrid (данные категорий)
+            // Команды уже привязаны через XAML с RelativeSource
         }
 
         protected override void OnClosed(EventArgs e)
