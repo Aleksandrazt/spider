@@ -25,7 +25,6 @@ namespace Spider.ViewModels
         private string _buildOutput = string.Empty;
         private bool _isLoading;
         private bool _isBuilding;
-        private Process? _currentProcess;
 
         #region Свойства
 
@@ -119,7 +118,7 @@ namespace Spider.ViewModels
         /// <summary>
         /// Можно ли выполнять Docker команды
         /// </summary>
-        public bool CanExecuteDockerCommands => !IsBuilding && IsProjectSelected;
+        public bool CanExecuteDockerCommands => IsProjectSelected;
 
         #endregion
 
@@ -152,11 +151,23 @@ namespace Spider.ViewModels
             EditProjectCommand = new RelayCommand(param => EditProject(param as DockerProject));
             DeleteProjectCommand = new RelayCommand(param => DeleteProject(param as DockerProject));
             RefreshImagesCommand = new RelayCommand(async _ => await LoadProjectImagesAsync(), _ => IsProjectSelected);
-            StartImageCommand = new RelayCommand(async param => await StartImageAsync(param as DockerImageViewModel), _ => CanExecuteDockerCommands);
-            StopImageCommand = new RelayCommand(async param => await StopImageAsync(param as DockerImageViewModel), _ => CanExecuteDockerCommands);
-            StartAllImagesCommand = new RelayCommand(async _ => await StartAllImagesAsync(), _ => CanExecuteDockerCommands);
-            StopAllImagesCommand = new RelayCommand(async _ => await StopAllImagesAsync(), _ => CanExecuteDockerCommands);
-            RebuildImageCommand = new RelayCommand(async param => await RebuildImageAsync(param as DockerImageViewModel), _ => CanExecuteDockerCommands);
+            StartImageCommand = new RelayCommand(async param => await StartImageAsync(param as DockerImageViewModel), param => 
+            {
+                var image = param as DockerImageViewModel;
+                return image != null && !image.IsProcessing && CanExecuteDockerCommands;
+            });
+            StopImageCommand = new RelayCommand(async param => await StopImageAsync(param as DockerImageViewModel), param => 
+            {
+                var image = param as DockerImageViewModel;
+                return image != null && !image.IsProcessing && CanExecuteDockerCommands;
+            });
+            StartAllImagesCommand = new RelayCommand(async _ => await StartAllImagesAsync(), _ => CanExecuteDockerCommands && !Images.Any(i => i.IsProcessing));
+            StopAllImagesCommand = new RelayCommand(async _ => await StopAllImagesAsync(), _ => CanExecuteDockerCommands && !Images.Any(i => i.IsProcessing));
+            RebuildImageCommand = new RelayCommand(async param => await RebuildImageAsync(param as DockerImageViewModel), param => 
+            {
+                var image = param as DockerImageViewModel;
+                return image != null && !image.IsProcessing && CanExecuteDockerCommands;
+            });
             ClearOutputCommand = new RelayCommand(_ => BuildOutput = string.Empty);
 
             _ = LoadProjectsAsync();
@@ -233,6 +244,9 @@ namespace Spider.ViewModels
                     };
                     Images.Add(imageViewModel);
                 }
+
+                // Обновляем команды после загрузки образов
+                RefreshCommands();
 
                 if (Images.Count == 0)
                 {
@@ -352,6 +366,23 @@ namespace Spider.ViewModels
 
         #endregion
 
+        #region Вспомогательные методы
+
+        /// <summary>
+        /// Обновление состояния команд
+        /// </summary>
+        private void RefreshCommands()
+        {
+            // Обновляем CanExecute для всех команд
+            ((RelayCommand)StartImageCommand).RaiseCanExecuteChanged();
+            ((RelayCommand)StopImageCommand).RaiseCanExecuteChanged();
+            ((RelayCommand)StartAllImagesCommand).RaiseCanExecuteChanged();
+            ((RelayCommand)StopAllImagesCommand).RaiseCanExecuteChanged();
+            ((RelayCommand)RebuildImageCommand).RaiseCanExecuteChanged();
+        }
+
+        #endregion
+
         #region Методы CRUD операций для проектов
 
         private void AddProject()
@@ -464,6 +495,7 @@ namespace Spider.ViewModels
             if (image == null || SelectedProject == null) return;
 
             await ExecuteDockerCommandAsync(
+                image,
                 "up -d",
                 image.ServiceName,
                 $"Запуск сервиса: {image.ServiceName}"
@@ -478,6 +510,7 @@ namespace Spider.ViewModels
             if (image == null || SelectedProject == null) return;
 
             await ExecuteDockerCommandAsync(
+                image,
                 "stop",
                 image.ServiceName,
                 $"Остановка сервиса: {image.ServiceName}"
@@ -492,6 +525,7 @@ namespace Spider.ViewModels
             if (SelectedProject == null) return;
 
             await ExecuteDockerCommandAsync(
+                null,
                 "up -d",
                 "",
                 "Запуск всех сервисов"
@@ -506,6 +540,7 @@ namespace Spider.ViewModels
             if (SelectedProject == null) return;
 
             await ExecuteDockerCommandAsync(
+                null,
                 "down",
                 "",
                 "Остановка всех сервисов"
@@ -520,6 +555,7 @@ namespace Spider.ViewModels
             if (image == null || SelectedProject == null) return;
 
             await ExecuteDockerCommandAsync(
+                image,
                 "up -d --build",
                 image.ServiceName,
                 $"Пересборка и запуск сервиса: {image.ServiceName}"
@@ -529,14 +565,23 @@ namespace Spider.ViewModels
         /// <summary>
         /// Выполнение Docker команды
         /// </summary>
-        private async Task ExecuteDockerCommandAsync(string command, string serviceName, string description)
+        private async Task ExecuteDockerCommandAsync(DockerImageViewModel? image, string command, string serviceName, string description)
         {
             if (SelectedProject == null) return;
 
+            // Устанавливаем флаг обработки для конкретного сервиса
+            if (image != null)
+            {
+                image.IsProcessing = true;
+            }
+            else
+            {
+                // Для команд "все сервисы" устанавливаем глобальный флаг
+                IsBuilding = true;
+            }
+
             try
             {
-                IsBuilding = true;
-
                 var workDir = System.IO.Path.GetDirectoryName(SelectedProject.DockerComposePath);
                 if (string.IsNullOrEmpty(workDir))
                 {
@@ -552,7 +597,7 @@ namespace Spider.ViewModels
                 BuildOutput += $"⚡ Команда: {fullCommand}\n";
                 BuildOutput += $"═══════════════════════════════════════════════════\n\n";
 
-                _currentProcess = new Process
+                var process = new Process
                 {
                     StartInfo = new ProcessStartInfo
                     {
@@ -566,7 +611,7 @@ namespace Spider.ViewModels
                     }
                 };
 
-                _currentProcess.OutputDataReceived += (sender, e) =>
+                process.OutputDataReceived += (sender, e) =>
                 {
                     if (!string.IsNullOrEmpty(e.Data))
                     {
@@ -577,7 +622,7 @@ namespace Spider.ViewModels
                     }
                 };
 
-                _currentProcess.ErrorDataReceived += (sender, e) =>
+                process.ErrorDataReceived += (sender, e) =>
                 {
                     if (!string.IsNullOrEmpty(e.Data))
                     {
@@ -588,13 +633,13 @@ namespace Spider.ViewModels
                     }
                 };
 
-                _currentProcess.Start();
-                _currentProcess.BeginOutputReadLine();
-                _currentProcess.BeginErrorReadLine();
+                process.Start();
+                process.BeginOutputReadLine();
+                process.BeginErrorReadLine();
 
-                await Task.Run(() => _currentProcess.WaitForExit());
+                await Task.Run(() => process.WaitForExit());
 
-                var exitCode = _currentProcess.ExitCode;
+                var exitCode = process.ExitCode;
                 BuildOutput += $"\n═══════════════════════════════════════════════════\n";
                 if (exitCode == 0)
                 {
@@ -606,8 +651,9 @@ namespace Spider.ViewModels
                 }
                 BuildOutput += $"═══════════════════════════════════════════════════\n\n";
 
-                await Task.Delay(1000);
+                await Task.Delay(500);
                 await LoadProjectImagesAsync();
+                RefreshCommands();
             }
             catch (Exception ex)
             {
@@ -615,9 +661,16 @@ namespace Spider.ViewModels
             }
             finally
             {
-                _currentProcess?.Dispose();
-                _currentProcess = null;
-                IsBuilding = false;
+                if (image != null)
+                {
+                    image.IsProcessing = false;
+                }
+                else
+                {
+                    IsBuilding = false;
+                }
+                
+                RefreshCommands();
             }
         }
 
@@ -646,8 +699,6 @@ namespace Spider.ViewModels
 
         public void Dispose()
         {
-            _currentProcess?.Kill(true);
-            _currentProcess?.Dispose();
             _dockerService?.Dispose();
         }
 
@@ -660,6 +711,7 @@ namespace Spider.ViewModels
     public class DockerImageViewModel : INotifyPropertyChanged
     {
         private bool _isRunning;
+        private bool _isProcessing;
 
         public int ProjectId { get; set; }
         public string ServiceName { get; set; } = string.Empty;
@@ -676,8 +728,20 @@ namespace Spider.ViewModels
             }
         }
 
-        public string Status => IsRunning ? "🟢 Запущен" : "🔴 Остановлен";
-        public string StatusColor => IsRunning ? "#4CAF50" : "#F44336";
+        public bool IsProcessing
+        {
+            get => _isProcessing;
+            set
+            {
+                _isProcessing = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(Status));
+                OnPropertyChanged(nameof(StatusColor));
+            }
+        }
+
+        public string Status => IsProcessing ? "⏳ Обработка..." : (IsRunning ? "🟢 Запущен" : "🔴 Остановлен");
+        public string StatusColor => IsProcessing ? "#FF9800" : (IsRunning ? "#4CAF50" : "#F44336");
 
         public event PropertyChangedEventHandler? PropertyChanged;
         protected void OnPropertyChanged([CallerMemberName] string? propertyName = null)

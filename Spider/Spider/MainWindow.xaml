@@ -92,6 +92,31 @@
                 </Trigger>
             </Style.Triggers>
         </Style>
+
+        <!-- Стиль для DataGrid с чередованием цветов строк -->
+        <Style TargetType="DataGrid" x:Key="AlternatingRowsDataGrid">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="AlternatingRowBackground" Value="#E3F2FD"/>
+            <Setter Property="GridLinesVisibility" Value="Horizontal"/>
+            <Setter Property="HeadersVisibility" Value="Column"/>
+            <Setter Property="CanUserAddRows" Value="False"/>
+            <Setter Property="AutoGenerateColumns" Value="False"/>
+            <Setter Property="SelectionMode" Value="Single"/>
+            <Setter Property="SelectionUnit" Value="FullRow"/>
+        </Style>
+
+        <!-- Стиль для DataGrid Docker с улучшенным контрастом -->
+        <Style TargetType="DataGrid" x:Key="DockerDataGrid">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="AlternatingRowBackground" Value="#FFF3E0"/>
+            <Setter Property="GridLinesVisibility" Value="Horizontal"/>
+            <Setter Property="HeadersVisibility" Value="Column"/>
+            <Setter Property="CanUserAddRows" Value="False"/>
+            <Setter Property="AutoGenerateColumns" Value="False"/>
+            <Setter Property="SelectionMode" Value="Single"/>
+            <Setter Property="SelectionUnit" Value="FullRow"/>
+            <Setter Property="RowBackground" Value="#FAFAFA"/>
+        </Style>
     </Window.Resources>
 
     <Grid>
@@ -243,10 +268,7 @@
                             <Grid Grid.Row="1" Margin="10,0">
                                 <!-- DataGrid с данными -->
                                 <DataGrid x:Name="CategoryDataGrid"
-                                        AutoGenerateColumns="False"
-                                        CanUserAddRows="False"
-                                        HeadersVisibility="Column"
-                                        GridLinesVisibility="Horizontal">
+                                        Style="{StaticResource AlternatingRowsDataGrid}">
                                     <DataGrid.Columns>
                                         <DataGridTextColumn Header="Название" 
                                                           Binding="{Binding Name}" 
@@ -397,7 +419,7 @@
                                                              TextTrimming="CharacterEllipsis"/>
                                                 </StackPanel>
 
-                                                <!-- Кнопки действий -->
+                                                <!-- Кнопки действий (только редактирование и удаление) -->
                                                 <StackPanel Grid.Column="1" 
                                                           Orientation="Horizontal"
                                                           VerticalAlignment="Center"
@@ -736,10 +758,7 @@
                             <Grid Grid.Row="2" Margin="10,0,10,10">
                                 <!-- DataGrid с образами -->
                                 <DataGrid x:Name="DockerImagesDataGrid"
-                                        AutoGenerateColumns="False"
-                                        CanUserAddRows="False"
-                                        HeadersVisibility="Column"
-                                        GridLinesVisibility="Horizontal"
+                                        Style="{StaticResource DockerDataGrid}"
                                         Visibility="Collapsed">
                                     <DataGrid.Columns>
                                         <DataGridTextColumn Header="Сервис" 

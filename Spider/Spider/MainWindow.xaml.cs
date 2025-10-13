@@ -68,7 +68,7 @@ namespace Spider
 
             CommandsListBox.SelectionChanged += (s, e) =>
             {
-                var selectedCommand = CommandsListBox.SelectedItem as Models.Command;
+                var selectedCommand = CommandsListBox.SelectedItem as CommandViewModel;
                 _commandsViewModel.SelectedCommand = selectedCommand;
                 
                 if (selectedCommand != null)
@@ -96,6 +96,7 @@ namespace Spider
             {
                 if (e.PropertyName == nameof(_commandsViewModel.CommandOutput))
                 {
+                    System.Diagnostics.Debug.WriteLine($"[DEBUG] Обновление вывода: {_commandsViewModel.CommandOutput.Length} символов");
                     CommandOutputTextBox.Text = _commandsViewModel.CommandOutput;
                     CommandOutputTextBox.ScrollToEnd();
                 }
