@@ -19,6 +19,7 @@ namespace Spider
         private readonly ScreenshotViewModel _screenshotViewModel;
         private readonly ReminderService _reminderService;
         private DispatcherTimer? _snoozeTimer;
+        private bool _isReminderWindowShowing;
 
         public MainWindow()
         {
@@ -340,32 +341,85 @@ namespace Spider
 
         private void ShowReminderWindow()
         {
-            var settings = _reminderService.GetSettings();
-            var reminderWindow = new ReminderWindow(settings.ReminderTitle, settings.ReminderMessage);
-            
-            reminderWindow.ShowDialog();
-
-            // Если пользователь нажал "Напомнить позже"
-            if (reminderWindow.Snoozed)
+            // Предотвращаем показ нескольких окон одновременно
+            if (_isReminderWindowShowing)
             {
-                // Остановить основной таймер
-                _reminderService.Stop();
+                return;
+            }
 
-                // Создать таймер отложенного напоминания на 5 минут
-                _snoozeTimer?.Stop();
-                _snoozeTimer = new DispatcherTimer();
-                _snoozeTimer.Interval = TimeSpan.FromMinutes(5);
-                _snoozeTimer.Tick += (s, e) =>
+            try
+            {
+                _isReminderWindowShowing = true;
+                
+                var settings = _reminderService.GetSettings();
+                var reminderWindow = new ReminderWindow(settings.ReminderTitle, settings.ReminderMessage);
+                
+                reminderWindow.ShowDialog();
+
+                // Если пользователь нажал "Напомнить позже"
+                if (reminderWindow.Snoozed)
                 {
-                    _snoozeTimer?.Stop();
-                    ShowReminderWindow();
-                    // Перезапустить основной таймер после отложенного напоминания
-                    if (_reminderService.GetSettings().IsEnabled)
+                    StartSnoozeTimer();
+                }
+                else
+                {
+                    // Пользователь закрыл окно нормально - возобновляем основной таймер
+                    if (_reminderService.GetSettings().IsEnabled && !_reminderService.IsRunning)
                     {
                         _reminderService.Start();
                     }
-                };
-                _snoozeTimer.Start();
+                }
+            }
+            finally
+            {
+                _isReminderWindowShowing = false;
+            }
+        }
+
+        private void StartSnoozeTimer()
+        {
+            // Остановить основной таймер
+            _reminderService.Stop();
+
+            // Правильно очищаем предыдущий snooze таймер
+            CleanupSnoozeTimer();
+
+            // Создать таймер отложенного напоминания на 5 минут
+            _snoozeTimer = new DispatcherTimer();
+            _snoozeTimer.Interval = TimeSpan.FromMinutes(5);
+            _snoozeTimer.Tick += OnSnoozeTimerTick;
+            _snoozeTimer.Start();
+            
+            System.Diagnostics.Debug.WriteLine("Snooze таймер запущен на 5 минут");
+        }
+
+        private void OnSnoozeTimerTick(object? sender, EventArgs e)
+        {
+            System.Diagnostics.Debug.WriteLine("Snooze таймер сработал");
+            
+            // Останавливаем и очищаем snooze таймер
+            CleanupSnoozeTimer();
+            
+            // Показываем напоминание
+            ShowReminderWindow();
+            
+            // Если после показа напоминания snooze таймер не был запущен снова,
+            // перезапускаем основной таймер
+            if (_snoozeTimer == null && _reminderService.GetSettings().IsEnabled)
+            {
+                _reminderService.Start();
+                System.Diagnostics.Debug.WriteLine("Основной таймер возобновлен");
+            }
+        }
+
+        private void CleanupSnoozeTimer()
+        {
+            if (_snoozeTimer != null)
+            {
+                _snoozeTimer.Stop();
+                _snoozeTimer.Tick -= OnSnoozeTimerTick;
+                _snoozeTimer = null;
+                System.Diagnostics.Debug.WriteLine("Snooze таймер очищен");
             }
         }
 
@@ -394,7 +448,7 @@ namespace Spider
             _dockerViewModel?.Dispose();
             _screenshotViewModel?.Dispose();
             _reminderService?.Dispose();
-            _snoozeTimer?.Stop();
+            CleanupSnoozeTimer();
             base.OnClosed(e);
         }
 
