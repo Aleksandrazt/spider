@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Spider.Models;
 using System.IO;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace Spider.Data
 {

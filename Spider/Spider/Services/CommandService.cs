@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Spider.Models;
 
-
 namespace Spider.Services
 {
     public class CommandService : DataService
