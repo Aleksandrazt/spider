@@ -573,14 +573,14 @@
                                                  Margin="0,0,0,16"
                                                  Foreground="#6C757D"/>
                                         <TextBlock Text="Выберите команду" 
-                             FontSize="18" 
+                                                 FontSize="18" 
                                                  FontWeight="SemiBold"
                                                  HorizontalAlignment="Center"
                                                  Margin="0,0,0,8"
                                                  Foreground="#495057"/>
                                         <TextBlock Text="для запуска и просмотра вывода" 
                                                  FontSize="14" 
-                             HorizontalAlignment="Center" 
+                                                 HorizontalAlignment="Center" 
                                                  Foreground="#6C757D"/>
                                     </StackPanel>
                                 </Border>
@@ -830,14 +830,14 @@
                                                  Margin="0,0,0,16"
                                                  Foreground="#6C757D"/>
                                         <TextBlock Text="Выберите Docker проект" 
-                             FontSize="18" 
+                                                 FontSize="18" 
                                                  FontWeight="SemiBold"
                                                  HorizontalAlignment="Center"
                                                  Margin="0,0,0,8"
                                                  Foreground="#495057"/>
                                         <TextBlock Text="для управления образами" 
                                                  FontSize="14" 
-                             HorizontalAlignment="Center" 
+                                                 HorizontalAlignment="Center" 
                                                  Foreground="#6C757D"/>
                                     </StackPanel>
                                 </Border>
@@ -1136,6 +1136,174 @@
                                       HorizontalAlignment="Left"
                                       Padding="30,12"
                                       FontSize="14"/>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Border>
+                </Grid>
+            </TabItem>
+
+            <!-- Вкладка 5: Напоминания -->
+            <TabItem Header="⏰ Напоминания">
+                <Grid Margin="10">
+                    <Border Background="White" 
+                            CornerRadius="8" 
+                            Padding="20"
+                            BorderBrush="#E0E0E0"
+                            BorderThickness="1">
+                        <Border.Effect>
+                            <DropShadowEffect Color="Gray" BlurRadius="10" ShadowDepth="2" Opacity="0.3"/>
+                        </Border.Effect>
+                        
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <StackPanel>
+                                <!-- Заголовок -->
+                                <TextBlock Text="⏰ Настройки напоминаний"
+                                         FontSize="24"
+                                         FontWeight="Bold"
+                                         Foreground="#333"
+                                         Margin="0,0,0,10"/>
+                                
+                                <TextBlock Text="Настройте периодические напоминания о необходимости сделать разминку для глаз и тела"
+                                         FontSize="13"
+                                         Foreground="#666"
+                                         TextWrapping="Wrap"
+                                         Margin="0,0,0,30"/>
+
+                                <Separator Margin="0,0,0,20" Background="#E0E0E0"/>
+
+                                <!-- Включение/отключение -->
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,25">
+                                    <CheckBox x:Name="EnableRemindersCheckBox"
+                                            Content="Включить напоминания"
+                                            FontSize="16"
+                                            FontWeight="SemiBold"
+                                            VerticalAlignment="Center"
+                                            Margin="0,0,10,0"/>
+                                    
+                                    <TextBlock x:Name="ReminderStatusText"
+                                             Text="(выключено)"
+                                             FontSize="14"
+                                             Foreground="#999"
+                                             VerticalAlignment="Center"/>
+                                </StackPanel>
+
+                                <!-- Интервал напоминаний -->
+                                <StackPanel Margin="0,0,0,20">
+                                    <TextBlock Text="Интервал напоминаний (в минутах):"
+                                             FontSize="14"
+                                             FontWeight="SemiBold"
+                                             Foreground="#333"
+                                             Margin="0,0,0,8"/>
+                                    
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="120"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <TextBox x:Name="IntervalMinutesTextBox"
+                                               Grid.Column="0"
+                                               Text="45"
+                                               FontSize="14"
+                                               Padding="8"
+                                               VerticalContentAlignment="Center"/>
+                                        
+                                        <TextBlock Grid.Column="1"
+                                                 Text="минут (рекомендуется 30-60 минут)"
+                                                 FontSize="12"
+                                                 Foreground="#666"
+                                                 VerticalAlignment="Center"
+                                                 Margin="10,0,0,0"/>
+                                    </Grid>
+                                </StackPanel>
+
+                                <!-- Заголовок напоминания -->
+                                <StackPanel Margin="0,0,0,20">
+                                    <TextBlock Text="Заголовок напоминания:"
+                                             FontSize="14"
+                                             FontWeight="SemiBold"
+                                             Foreground="#333"
+                                             Margin="0,0,0,8"/>
+                                    
+                                    <TextBox x:Name="ReminderTitleTextBox"
+                                           Text="Время для разминки!"
+                                           FontSize="14"
+                                           Padding="8"
+                                           VerticalContentAlignment="Center"/>
+                                </StackPanel>
+
+                                <!-- Текст напоминания -->
+                                <StackPanel Margin="0,0,0,25">
+                                    <TextBlock Text="Текст напоминания:"
+                                             FontSize="14"
+                                             FontWeight="SemiBold"
+                                             Foreground="#333"
+                                             Margin="0,0,0,8"/>
+                                    
+                                    <TextBox x:Name="ReminderMessageTextBox"
+                                           Text="Пришло время сделать разминку для глаз и тела."
+                                           FontSize="14"
+                                           Padding="8"
+                                           Height="120"
+                                           TextWrapping="Wrap"
+                                           AcceptsReturn="True"
+                                           VerticalScrollBarVisibility="Auto"/>
+                                    
+                                    <TextBlock Text="💡 Совет: Опишите какие упражнения следует выполнить"
+                                             FontSize="11"
+                                             Foreground="#888"
+                                             Margin="0,5,0,0"
+                                             FontStyle="Italic"/>
+                                </StackPanel>
+
+                                <Separator Margin="0,0,0,25" Background="#E0E0E0"/>
+
+                                <!-- Информационная панель -->
+                                <Border Background="#E3F2FD"
+                                      BorderBrush="#2196F3"
+                                      BorderThickness="1"
+                                      CornerRadius="6"
+                                      Padding="15"
+                                      Margin="0,0,0,25">
+                                    <StackPanel>
+                                        <TextBlock Text="ℹ️ Информация"
+                                                 FontSize="14"
+                                                 FontWeight="Bold"
+                                                 Foreground="#1976D2"
+                                                 Margin="0,0,0,10"/>
+                                        
+                                        <TextBlock TextWrapping="Wrap" 
+                                                 FontSize="12" 
+                                                 Foreground="#333"
+                                                 LineHeight="20">
+                                            <Run Text="• Напоминания помогут сохранить здоровье глаз и избежать проблем с опорно-двигательным аппаратом"/>
+                                            <LineBreak/>
+                                            <Run Text="• Рекомендуется делать перерыв каждые 45-60 минут работы"/>
+                                            <LineBreak/>
+                                            <Run Text="• Правило 20-20-20: каждые 20 минут смотрите на объект в 20 футах (6 метров) в течение 20 секунд"/>
+                                            <LineBreak/>
+                                            <Run Text="• При появлении напоминания можно отложить его на 5 минут"/>
+                                        </TextBlock>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Кнопки управления -->
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                                    <Button x:Name="SaveReminderSettingsButton"
+                                          Content="💾 Сохранить настройки"
+                                          Style="{StaticResource PrimaryButton}"
+                                          Background="#4CAF50"
+                                          Padding="30,12"
+                                          FontSize="14"
+                                          Margin="0,0,15,0"/>
+                                    
+                                    <Button x:Name="TestReminderButton"
+                                          Content="🔔 Тестовое напоминание"
+                                          Style="{StaticResource PrimaryButton}"
+                                          Background="#FF9800"
+                                          Padding="20,12"
+                                          FontSize="14"/>
+                                </StackPanel>
                             </StackPanel>
                         </ScrollViewer>
                     </Border>

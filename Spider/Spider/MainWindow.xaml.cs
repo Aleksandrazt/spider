@@ -1,6 +1,10 @@
 ﻿using Spider.ViewModels;
+using Spider.Services;
+using Spider.Models;
+using Spider.Views.Windows;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Threading;
 
 namespace Spider
 {
@@ -13,6 +17,9 @@ namespace Spider
         private readonly CommandsViewModel _commandsViewModel;
         private readonly DockerViewModel _dockerViewModel;
         private readonly ScreenshotViewModel _screenshotViewModel;
+        private readonly ReminderService _reminderService;
+        private DispatcherTimer? _snoozeTimer;
+        private bool _isReminderWindowShowing;
 
         public MainWindow()
         {
@@ -22,6 +29,7 @@ namespace Spider
             _commandsViewModel = new CommandsViewModel();
             _dockerViewModel = new DockerViewModel();
             _screenshotViewModel = new ScreenshotViewModel();
+            _reminderService = new ReminderService();
 
             DataContext = _categoriesViewModel;
 
@@ -250,6 +258,32 @@ namespace Spider
             };
 
             #endregion
+
+            #region Инициализация вкладки Напоминания
+
+            var reminderSettings = _reminderService.GetSettings();
+            EnableRemindersCheckBox.IsChecked = reminderSettings.IsEnabled;
+            IntervalMinutesTextBox.Text = reminderSettings.IntervalMinutes.ToString();
+            ReminderTitleTextBox.Text = reminderSettings.ReminderTitle;
+            ReminderMessageTextBox.Text = reminderSettings.ReminderMessage;
+
+            UpdateReminderStatus();
+
+            EnableRemindersCheckBox.Checked += (s, e) => UpdateReminderStatus();
+            EnableRemindersCheckBox.Unchecked += (s, e) => UpdateReminderStatus();
+
+            SaveReminderSettingsButton.Click += SaveReminderSettings_Click;
+            TestReminderButton.Click += TestReminder_Click;
+
+            _reminderService.ReminderTriggered += OnReminderTriggered;
+
+            // Запустить таймер, если напоминания включены
+            if (reminderSettings.IsEnabled)
+            {
+                _reminderService.Start();
+            }
+
+            #endregion
         }
 
         private void SaveScreenshotSettings_Click(object sender, RoutedEventArgs e)
@@ -257,12 +291,164 @@ namespace Spider
             _screenshotViewModel.SaveSettingsCommand.Execute(null);
         }
 
+        #region Обработчики напоминаний
+
+        private void SaveReminderSettings_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                // Валидация интервала
+                if (!int.TryParse(IntervalMinutesTextBox.Text, out int intervalMinutes) || intervalMinutes < 1)
+                {
+                    MessageBox.Show("Пожалуйста, введите корректный интервал (минимум 1 минута)", 
+                                  "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                var settings = new ReminderSettings
+                {
+                    IsEnabled = EnableRemindersCheckBox.IsChecked == true,
+                    IntervalMinutes = intervalMinutes,
+                    ReminderTitle = ReminderTitleTextBox.Text,
+                    ReminderMessage = ReminderMessageTextBox.Text
+                };
+
+                _reminderService.UpdateSettings(settings);
+                UpdateReminderStatus();
+
+                MessageBox.Show("Настройки напоминаний сохранены успешно!", 
+                              "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка при сохранении настроек: {ex.Message}", 
+                              "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void TestReminder_Click(object sender, RoutedEventArgs e)
+        {
+            ShowReminderWindow();
+        }
+
+        private void OnReminderTriggered(object? sender, EventArgs e)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                ShowReminderWindow();
+            });
+        }
+
+        private void ShowReminderWindow()
+        {
+            // Предотвращаем показ нескольких окон одновременно
+            if (_isReminderWindowShowing)
+            {
+                return;
+            }
+
+            try
+            {
+                _isReminderWindowShowing = true;
+                
+                var settings = _reminderService.GetSettings();
+                var reminderWindow = new ReminderWindow(settings.ReminderTitle, settings.ReminderMessage);
+                
+                reminderWindow.ShowDialog();
+
+                // Если пользователь нажал "Напомнить позже"
+                if (reminderWindow.Snoozed)
+                {
+                    StartSnoozeTimer();
+                }
+                else
+                {
+                    // Пользователь закрыл окно нормально - возобновляем основной таймер
+                    if (_reminderService.GetSettings().IsEnabled && !_reminderService.IsRunning)
+                    {
+                        _reminderService.Start();
+                    }
+                }
+            }
+            finally
+            {
+                _isReminderWindowShowing = false;
+            }
+        }
+
+        private void StartSnoozeTimer()
+        {
+            // Остановить основной таймер
+            _reminderService.Stop();
+
+            // Правильно очищаем предыдущий snooze таймер
+            CleanupSnoozeTimer();
+
+            // Создать таймер отложенного напоминания на 5 минут
+            _snoozeTimer = new DispatcherTimer();
+            _snoozeTimer.Interval = TimeSpan.FromMinutes(5);
+            _snoozeTimer.Tick += OnSnoozeTimerTick;
+            _snoozeTimer.Start();
+            
+            System.Diagnostics.Debug.WriteLine("Snooze таймер запущен на 5 минут");
+        }
+
+        private void OnSnoozeTimerTick(object? sender, EventArgs e)
+        {
+            System.Diagnostics.Debug.WriteLine("Snooze таймер сработал");
+            
+            // Останавливаем и очищаем snooze таймер
+            CleanupSnoozeTimer();
+            
+            // Показываем напоминание
+            ShowReminderWindow();
+            
+            // Если после показа напоминания snooze таймер не был запущен снова,
+            // перезапускаем основной таймер
+            if (_snoozeTimer == null && _reminderService.GetSettings().IsEnabled)
+            {
+                _reminderService.Start();
+                System.Diagnostics.Debug.WriteLine("Основной таймер возобновлен");
+            }
+        }
+
+        private void CleanupSnoozeTimer()
+        {
+            if (_snoozeTimer != null)
+            {
+                _snoozeTimer.Stop();
+                _snoozeTimer.Tick -= OnSnoozeTimerTick;
+                _snoozeTimer = null;
+                System.Diagnostics.Debug.WriteLine("Snooze таймер очищен");
+            }
+        }
+
+        private void UpdateReminderStatus()
+        {
+            if (EnableRemindersCheckBox.IsChecked == true)
+            {
+                ReminderStatusText.Text = "(включено)";
+                ReminderStatusText.Foreground = new System.Windows.Media.SolidColorBrush(
+                    System.Windows.Media.Color.FromRgb(76, 175, 80)); // Green
+            }
+            else
+            {
+                ReminderStatusText.Text = "(выключено)";
+                ReminderStatusText.Foreground = new System.Windows.Media.SolidColorBrush(
+                    System.Windows.Media.Color.FromRgb(153, 153, 153)); // Gray
+            }
+        }
+
+        #endregion
+
         protected override void OnClosed(EventArgs e)
         {
             _categoriesViewModel?.Dispose();
             _commandsViewModel?.Dispose();
             _dockerViewModel?.Dispose();
             _screenshotViewModel?.Dispose();
+            _reminderService?.Dispose();
+            CleanupSnoozeTimer();
             base.OnClosed(e);
         }
 
