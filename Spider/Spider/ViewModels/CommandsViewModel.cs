@@ -17,20 +17,17 @@ namespace Spider.ViewModels
     public class CommandsViewModel : INotifyPropertyChanged
     {
         private readonly CommandService _commandService;
-        private ObservableCollection<Command> _commands;
-        private Command? _selectedCommand;
+        private ObservableCollection<CommandViewModel> _commands;
+        private CommandViewModel? _selectedCommand;
         private string _additionalArguments = string.Empty;
-        private string _commandOutput = string.Empty;
         private bool _isLoading;
-        private bool _isExecuting;
-        private Process? _currentProcess;
 
         #region Свойства
 
         /// <summary>
         /// Коллекция всех команд
         /// </summary>
-        public ObservableCollection<Command> Commands
+        public ObservableCollection<CommandViewModel> Commands
         {
             get => _commands;
             set => SetProperty(ref _commands, value);
@@ -39,7 +36,7 @@ namespace Spider.ViewModels
         /// <summary>
         /// Выбранная команда
         /// </summary>
-        public Command? SelectedCommand
+        public CommandViewModel? SelectedCommand
         {
             get => _selectedCommand;
             set
@@ -48,8 +45,20 @@ namespace Spider.ViewModels
                 {
                     OnPropertyChanged(nameof(SelectedCommandName));
                     OnPropertyChanged(nameof(IsCommandSelected));
+                    OnPropertyChanged(nameof(SelectedCommandOutput));
+                    OnPropertyChanged(nameof(CommandOutput));
+                    OnPropertyChanged(nameof(IsExecuting));
+                    OnPropertyChanged(nameof(CanExecute));
+                    OnPropertyChanged(nameof(CanStop));
                     AdditionalArguments = value?.Arguments ?? string.Empty;
-                    CommandOutput = string.Empty;
+
+                    if (value != null)
+                    {
+                        value.PropertyChanged += OnSelectedCommandPropertyChanged;
+                    }
+
+                    ((RelayCommand)ExecuteCommandCommand).RaiseCanExecuteChanged();
+                    ((RelayCommand)StopCommandCommand).RaiseCanExecuteChanged();
                 }
             }
         }
@@ -64,13 +73,19 @@ namespace Spider.ViewModels
         }
 
         /// <summary>
-        /// Вывод команды (как в терминале)
+        /// Вывод выбранной команды (как в терминале)
         /// </summary>
-        public string CommandOutput
-        {
-            get => _commandOutput;
-            set => SetProperty(ref _commandOutput, value);
-        }
+        public string SelectedCommandOutput => SelectedCommand?.Output ?? string.Empty;
+
+        /// <summary>
+        /// Вывод команды (для совместимости с MainWindow.xaml.cs)
+        /// </summary>
+        public string CommandOutput => SelectedCommandOutput;
+
+        /// <summary>
+        /// Флаг выполнения команды (для совместимости с MainWindow.xaml.cs)
+        /// </summary>
+        public bool IsExecuting => SelectedCommand?.IsExecuting ?? false;
 
         /// <summary>
         /// Название выбранной команды (для отображения)
@@ -92,30 +107,14 @@ namespace Spider.ViewModels
         }
 
         /// <summary>
-        /// Флаг выполнения команды
+        /// Можно ли запустить выбранную команду
         /// </summary>
-        public bool IsExecuting
-        {
-            get => _isExecuting;
-            set
-            {
-                if (SetProperty(ref _isExecuting, value))
-                {
-                    OnPropertyChanged(nameof(CanExecute));
-                    OnPropertyChanged(nameof(CanStop));
-                }
-            }
-        }
+        public bool CanExecute => SelectedCommand?.CanExecute ?? false;
 
         /// <summary>
-        /// Можно ли запустить команду
+        /// Можно ли остановить выбранную команду
         /// </summary>
-        public bool CanExecute => !IsExecuting && IsCommandSelected;
-
-        /// <summary>
-        /// Можно ли остановить команду
-        /// </summary>
-        public bool CanStop => IsExecuting;
+        public bool CanStop => SelectedCommand?.CanStop ?? false;
 
         #endregion
 
@@ -166,17 +165,30 @@ namespace Spider.ViewModels
         public CommandsViewModel()
         {
             _commandService = new CommandService();
-            _commands = new ObservableCollection<Command>();
+            _commands = new ObservableCollection<CommandViewModel>();
 
             LoadCommandsCommand = new RelayCommand(async _ => await LoadCommandsAsync());
             AddCommandCommand = new RelayCommand(_ => AddCommand());
-            EditCommandCommand = new RelayCommand(param => EditCommand(param as Command));
-            DeleteCommandCommand = new RelayCommand(param => DeleteCommand(param as Command));
+            EditCommandCommand = new RelayCommand(param => EditCommand(param as CommandViewModel));
+            DeleteCommandCommand = new RelayCommand(param => DeleteCommand(param as CommandViewModel));
             ExecuteCommandCommand = new RelayCommand(async _ => await ExecuteCommandAsync(), _ => CanExecute);
             StopCommandCommand = new RelayCommand(_ => StopCommand(), _ => CanStop);
-            ClearOutputCommand = new RelayCommand(_ => CommandOutput = string.Empty);
+            ClearOutputCommand = new RelayCommand(_ => 
+            {
+                if (SelectedCommand != null)
+                    SelectedCommand.Output = string.Empty;
+            });
 
             _ = LoadCommandsAsync();
+            
+            _ = Task.Run(async () =>
+            {
+                await Task.Delay(1000);
+                if (!Commands.Any())
+                {
+                    await CreateTestCommand();
+                }
+            });
         }
 
         #endregion
@@ -193,10 +205,13 @@ namespace Spider.ViewModels
                 IsLoading = true;
                 var commands = await _commandService.GetCommandsAsync();
 
+                System.Diagnostics.Debug.WriteLine($"[DEBUG] Загружено команд: {commands.Count}");
+                
                 Commands.Clear();
                 foreach (var command in commands)
                 {
-                    Commands.Add(command);
+                    Commands.Add(new CommandViewModel(command, this));
+                    System.Diagnostics.Debug.WriteLine($"[DEBUG] Добавлена команда: {command.Name}");
                 }
             }
             catch (Exception ex)
@@ -210,6 +225,32 @@ namespace Spider.ViewModels
             finally
             {
                 IsLoading = false;
+            }
+        }
+
+        /// <summary>
+        /// Создание тестовой команды для проверки
+        /// </summary>
+        private async Task CreateTestCommand()
+        {
+            try
+            {
+                var testCommand = new Models.Command
+                {
+                    Name = "Тестовая команда",
+                    CommandText = "echo 'Привет, мир!'",
+                    FolderPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
+                    Description = "Простая тестовая команда для проверки работы"
+                };
+
+                await _commandService.AddCommandAsync(testCommand);
+                await LoadCommandsAsync();
+                
+                System.Diagnostics.Debug.WriteLine("[DEBUG] Создана тестовая команда");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[DEBUG] Ошибка создания тестовой команды: {ex.Message}");
             }
         }
 
@@ -251,9 +292,9 @@ namespace Spider.ViewModels
         /// <summary>
         /// Редактирование выбранной команды
         /// </summary>
-        private void EditCommand(Command? command = null)
+        private void EditCommand(CommandViewModel? commandViewModel = null)
         {
-            var commandToEdit = command ?? SelectedCommand;
+            var commandToEdit = commandViewModel ?? SelectedCommand;
 
             if (commandToEdit == null)
             {
@@ -264,7 +305,7 @@ namespace Spider.ViewModels
                 return;
             }
 
-            var dialog = new CommandDialog(commandToEdit);
+            var dialog = new CommandDialog(commandToEdit.Command);
             if (dialog.ShowDialog() == true)
             {
                 _ = UpdateCommandAsync(dialog.Command);
@@ -274,9 +315,9 @@ namespace Spider.ViewModels
         /// <summary>
         /// Удаление выбранной команды
         /// </summary>
-        private async void DeleteCommand(Command? command = null)
+        private async void DeleteCommand(CommandViewModel? commandViewModel = null)
         {
-            var commandToDelete = command ?? SelectedCommand;
+            var commandToDelete = commandViewModel ?? SelectedCommand;
 
             if (commandToDelete == null)
             {
@@ -337,40 +378,51 @@ namespace Spider.ViewModels
         /// <summary>
         /// Выполнение выбранной команды
         /// </summary>
-        private async Task ExecuteCommandAsync()
+        public async Task ExecuteCommandAsync()
         {
             if (SelectedCommand == null) return;
 
+            await ExecuteCommandAsync(SelectedCommand);
+        }
+
+        /// <summary>
+        /// Выполнение конкретной команды
+        /// </summary>
+        public async Task ExecuteCommandAsync(CommandViewModel commandViewModel)
+        {
             try
             {
-                IsExecuting = true;
+                commandViewModel.IsExecuting = true;
 
-                if (!System.IO.Directory.Exists(SelectedCommand.FolderPath))
+                if (!System.IO.Directory.Exists(commandViewModel.FolderPath))
                 {
-                    CommandOutput += $"❌ ОШИБКА: Директория '{SelectedCommand.FolderPath}' не найдена!\n\n";
-                    IsExecuting = false;
+                    commandViewModel.Output += $"❌ ОШИБКА: Директория '{commandViewModel.FolderPath}' не найдена!\n\n";
+                    commandViewModel.IsExecuting = false;
                     return;
                 }
 
-                var fullCommand = SelectedCommand.CommandText;
+                var fullCommand = commandViewModel.CommandText;
                 if (!string.IsNullOrWhiteSpace(AdditionalArguments))
                 {
                     fullCommand += " " + AdditionalArguments;
                 }
 
-                CommandOutput += $"═══════════════════════════════════════════════════\n";
-                CommandOutput += $"🚀 Запуск команды: {SelectedCommand.Name}\n";
-                CommandOutput += $"📁 Рабочая директория: {SelectedCommand.FolderPath}\n";
-                CommandOutput += $"⚡ Команда: {fullCommand}\n";
-                CommandOutput += $"═══════════════════════════════════════════════════\n\n";
+                commandViewModel.Output += $"═══════════════════════════════════════════════════\n";
+                commandViewModel.Output += $"🚀 Запуск команды: {commandViewModel.Name}\n";
+                commandViewModel.Output += $"📁 Рабочая директория: {commandViewModel.FolderPath}\n";
+                commandViewModel.Output += $"⚡ Команда: {fullCommand}\n";
+                commandViewModel.Output += $"═══════════════════════════════════════════════════\n\n";
+                
+                System.Diagnostics.Debug.WriteLine($"[DEBUG] Команда запущена: {commandViewModel.Name}");
+                System.Diagnostics.Debug.WriteLine($"[DEBUG] Вывод после запуска: {commandViewModel.Output.Length} символов");
 
-                _currentProcess = new Process
+                var process = new Process
                 {
                     StartInfo = new ProcessStartInfo
                     {
                         FileName = "powershell.exe",
                         Arguments = $"-NoProfile -Command \"{fullCommand}\"",
-                        WorkingDirectory = SelectedCommand.FolderPath,
+                        WorkingDirectory = commandViewModel.FolderPath,
                         UseShellExecute = false,
                         RedirectStandardOutput = true,
                         RedirectStandardError = true,
@@ -380,55 +432,58 @@ namespace Spider.ViewModels
                     }
                 };
 
-                _currentProcess.OutputDataReceived += (sender, e) =>
+                commandViewModel.CurrentProcess = process;
+
+                process.OutputDataReceived += (sender, e) =>
                 {
                     if (!string.IsNullOrEmpty(e.Data))
                     {
                         Application.Current.Dispatcher.Invoke(() =>
                         {
-                            CommandOutput += e.Data + "\n";
+                            commandViewModel.Output += e.Data + "\n";
+                            System.Diagnostics.Debug.WriteLine($"[DEBUG] Получен вывод: {e.Data}");
                         });
                     }
                 };
 
-                _currentProcess.ErrorDataReceived += (sender, e) =>
+                process.ErrorDataReceived += (sender, e) =>
                 {
                     if (!string.IsNullOrEmpty(e.Data))
                     {
                         Application.Current.Dispatcher.Invoke(() =>
                         {
-                            CommandOutput += $"⚠️ {e.Data}\n";
+                            commandViewModel.Output += $"⚠️ {e.Data}\n";
                         });
                     }
                 };
 
-                _currentProcess.Start();
-                _currentProcess.BeginOutputReadLine();
-                _currentProcess.BeginErrorReadLine();
+                process.Start();
+                process.BeginOutputReadLine();
+                process.BeginErrorReadLine();
 
-                await Task.Run(() => _currentProcess.WaitForExit());
+                await Task.Run(() => process.WaitForExit());
 
-                var exitCode = _currentProcess.ExitCode;
-                CommandOutput += $"\n═══════════════════════════════════════════════════\n";
+                var exitCode = process.ExitCode;
+                commandViewModel.Output += $"\n═══════════════════════════════════════════════════\n";
                 if (exitCode == 0)
                 {
-                    CommandOutput += $"✅ Команда выполнена успешно (код: {exitCode})\n";
+                    commandViewModel.Output += $"✅ Команда выполнена успешно (код: {exitCode})\n";
                 }
                 else
                 {
-                    CommandOutput += $"❌ Команда завершена с ошибкой (код: {exitCode})\n";
+                    commandViewModel.Output += $"❌ Команда завершена с ошибкой (код: {exitCode})\n";
                 }
-                CommandOutput += $"═══════════════════════════════════════════════════\n\n";
+                commandViewModel.Output += $"═══════════════════════════════════════════════════\n\n";
             }
             catch (Exception ex)
             {
-                CommandOutput += $"\n❌ ОШИБКА ВЫПОЛНЕНИЯ:\n{ex.Message}\n\n";
+                commandViewModel.Output += $"\n❌ ОШИБКА ВЫПОЛНЕНИЯ:\n{ex.Message}\n\n";
             }
             finally
             {
-                _currentProcess?.Dispose();
-                _currentProcess = null;
-                IsExecuting = false;
+                commandViewModel.CurrentProcess?.Dispose();
+                commandViewModel.CurrentProcess = null;
+                commandViewModel.IsExecuting = false;
             }
         }
 
@@ -437,16 +492,64 @@ namespace Spider.ViewModels
         /// </summary>
         private void StopCommand()
         {
-            if (_currentProcess != null && !_currentProcess.HasExited)
+            if (SelectedCommand?.CurrentProcess != null && !SelectedCommand.CurrentProcess.HasExited)
             {
                 try
                 {
-                    _currentProcess.Kill(entireProcessTree: true);
-                    CommandOutput += $"\n⛔ Выполнение команды принудительно остановлено\n\n";
+                    SelectedCommand.CurrentProcess.Kill(entireProcessTree: true);
+                    SelectedCommand.Output += $"\n⛔ Выполнение команды принудительно остановлено\n\n";
                 }
                 catch (Exception ex)
                 {
-                    CommandOutput += $"\n❌ Ошибка при остановке команды: {ex.Message}\n\n";
+                    SelectedCommand.Output += $"\n❌ Ошибка при остановке команды: {ex.Message}\n\n";
+                }
+            }
+        }
+
+        /// <summary>
+        /// Остановка выполнения конкретной команды
+        /// </summary>
+        public void StopCommandFor(CommandViewModel commandViewModel)
+        {
+            if (commandViewModel.CurrentProcess != null && !commandViewModel.CurrentProcess.HasExited)
+            {
+                try
+                {
+                    commandViewModel.CurrentProcess.Kill(entireProcessTree: true);
+                    commandViewModel.Output += $"\n⛔ Выполнение команды принудительно остановлено\n\n";
+                }
+                catch (Exception ex)
+                {
+                    commandViewModel.Output += $"\n❌ Ошибка при остановке команды: {ex.Message}\n\n";
+                }
+            }
+        }
+
+        #endregion
+
+        #region Обработчики событий
+
+        /// <summary>
+        /// Обработчик изменений выбранной команды
+        /// </summary>
+        private void OnSelectedCommandPropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (sender == SelectedCommand)
+            {
+                if (e.PropertyName == nameof(CommandViewModel.Output))
+                {
+                    OnPropertyChanged(nameof(CommandOutput));
+                    OnPropertyChanged(nameof(SelectedCommandOutput));
+                }
+                else if (e.PropertyName == nameof(CommandViewModel.IsExecuting))
+                {
+                    OnPropertyChanged(nameof(IsExecuting));
+                    OnPropertyChanged(nameof(CanExecute));
+                    OnPropertyChanged(nameof(CanStop));
+                    
+                    // Принудительно обновляем команды
+                    ((RelayCommand)ExecuteCommandCommand).RaiseCanExecuteChanged();
+                    ((RelayCommand)StopCommandCommand).RaiseCanExecuteChanged();
                 }
             }
         }
@@ -479,11 +582,91 @@ namespace Spider.ViewModels
         /// </summary>
         public void Dispose()
         {
-            StopCommand();
+            // Останавливаем все выполняющиеся команды
+            foreach (var command in Commands)
+            {
+                if (command.CurrentProcess != null && !command.CurrentProcess.HasExited)
+                {
+                    try
+                    {
+                        command.CurrentProcess.Kill(entireProcessTree: true);
+                        command.CurrentProcess.Dispose();
+                    }
+                    catch { }
+                }
+            }
+            
             _commandService?.Dispose();
         }
 
         #endregion
+    }
+
+    /// <summary>
+    /// ViewModel для отображения команды с состоянием выполнения
+    /// </summary>
+    public class CommandViewModel : INotifyPropertyChanged
+    {
+        private readonly Command _command;
+        private readonly CommandsViewModel _parentViewModel;
+        private bool _isExecuting;
+        private Process? _currentProcess;
+        private string _output = string.Empty;
+
+        public CommandViewModel(Command command, CommandsViewModel parentViewModel)
+        {
+            _command = command;
+            _parentViewModel = parentViewModel;
+
+            ClearOutputCommand = new RelayCommand(_ => Output = string.Empty);
+        }
+
+        public Command Command => _command;
+        public int Id => _command.Id;
+        public string Name => _command.Name;
+        public string CommandText => _command.CommandText;
+        public string FolderPath => _command.FolderPath;
+        public string? Description => _command.Description;
+        public string? Arguments => _command.Arguments;
+
+        public bool IsExecuting
+        {
+            get => _isExecuting;
+            set
+            {
+                _isExecuting = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(CanExecute));
+                OnPropertyChanged(nameof(CanStop));
+            }
+        }
+
+        public string Output
+        {
+            get => _output;
+            set
+            {
+                _output = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool CanExecute => !IsExecuting;
+        public bool CanStop => IsExecuting;
+
+        public Process? CurrentProcess
+        {
+            get => _currentProcess;
+            set => _currentProcess = value;
+        }
+
+        public ICommand ClearOutputCommand { get; }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+        protected void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
     }
 }
 

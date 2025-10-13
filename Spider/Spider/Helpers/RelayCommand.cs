@@ -46,5 +46,13 @@ namespace Spider.Helpers
             add { CommandManager.RequerySuggested += value; }
             remove { CommandManager.RequerySuggested -= value; }
         }
+
+        /// <summary>
+        /// Принудительное обновление возможности выполнения команды
+        /// </summary>
+        public void RaiseCanExecuteChanged()
+        {
+            CommandManager.InvalidateRequerySuggested();
+        }
     }
 }
