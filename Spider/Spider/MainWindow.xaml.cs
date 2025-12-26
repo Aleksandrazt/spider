@@ -5,6 +5,7 @@ using Spider.Views.Windows;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Threading;
+using Microsoft.Win32;
 
 namespace Spider
 {
@@ -18,6 +19,7 @@ namespace Spider
         private readonly DockerViewModel _dockerViewModel;
         private readonly ScreenshotViewModel _screenshotViewModel;
         private readonly ReminderService _reminderService;
+        private readonly ExportImportService _exportImportService;
         private DispatcherTimer? _snoozeTimer;
         private bool _isReminderWindowShowing;
 
@@ -30,6 +32,7 @@ namespace Spider
             _dockerViewModel = new DockerViewModel();
             _screenshotViewModel = new ScreenshotViewModel();
             _reminderService = new ReminderService();
+            _exportImportService = new ExportImportService();
 
             DataContext = _categoriesViewModel;
 
@@ -284,6 +287,85 @@ namespace Spider
             }
 
             #endregion
+
+            #region Инициализация кнопок экспорта/импорта
+
+            ExportDataButton.Click += ExportDataButton_Click;
+            ImportDataButton.Click += ImportDataButton_Click;
+
+            #endregion
+        }
+
+        private async void ExportDataButton_Click(object sender, RoutedEventArgs e)
+        {
+            var saveDialog = new Microsoft.Win32.SaveFileDialog
+            {
+                Filter = "JSON файлы (*.json)|*.json|Все файлы (*.*)|*.*",
+                FileName = $"spider_export_{DateTime.Now:yyyyMMdd_HHmmss}.json",
+                Title = "Экспорт данных"
+            };
+
+            if (saveDialog.ShowDialog() == true)
+            {
+                ExportDataButton.IsEnabled = false;
+                ExportDataButton.Content = "⏳ Экспорт...";
+                
+                try
+                {
+                    var success = await _exportImportService.ExportDataAsync(saveDialog.FileName);
+                    if (success)
+                    {
+                        MessageBox.Show(
+                            $"Данные успешно экспортированы в файл:\n{saveDialog.FileName}",
+                            "Экспорт завершен",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Information);
+                    }
+                }
+                finally
+                {
+                    ExportDataButton.IsEnabled = true;
+                    ExportDataButton.Content = "📤 Экспорт данных";
+                }
+            }
+        }
+
+        private async void ImportDataButton_Click(object sender, RoutedEventArgs e)
+        {
+            var openDialog = new Microsoft.Win32.OpenFileDialog
+            {
+                Filter = "JSON файлы (*.json)|*.json|Все файлы (*.*)|*.*",
+                Title = "Импорт данных"
+            };
+
+            if (openDialog.ShowDialog() == true)
+            {
+                ImportDataButton.IsEnabled = false;
+                ImportDataButton.Content = "⏳ Импорт...";
+                
+                try
+                {
+                    var success = await _exportImportService.ImportDataAsync(openDialog.FileName);
+                    if (success)
+                    {
+                        await RefreshAllDataAsync();
+                    }
+                }
+                finally
+                {
+                    ImportDataButton.IsEnabled = true;
+                    ImportDataButton.Content = "📥 Импорт данных";
+                }
+            }
+        }
+
+        private async Task RefreshAllDataAsync()
+        {
+            await _categoriesViewModel.LoadCategoriesAsync();
+            
+            await _commandsViewModel.LoadCommandsAsync();
+            
+            await _dockerViewModel.LoadProjectsAsync();
         }
 
         private void SaveScreenshotSettings_Click(object sender, RoutedEventArgs e)
@@ -448,6 +530,7 @@ namespace Spider
             _dockerViewModel?.Dispose();
             _screenshotViewModel?.Dispose();
             _reminderService?.Dispose();
+            _exportImportService?.Dispose();
             CleanupSnoozeTimer();
             base.OnClosed(e);
         }

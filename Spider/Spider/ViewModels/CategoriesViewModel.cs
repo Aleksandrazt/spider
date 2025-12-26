@@ -153,7 +153,7 @@ namespace Spider.ViewModels
         /// <summary>
         /// Загрузка всех категорий
         /// </summary>
-        private async Task LoadCategoriesAsync()
+        public async Task LoadCategoriesAsync()
         {
             try
             {

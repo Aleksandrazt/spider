@@ -120,8 +120,40 @@
     </Window.Resources>
 
     <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Панель экспорта/импорта -->
+        <Border Grid.Row="0"
+                Background="White"
+                BorderBrush="#E0E0E0"
+                BorderThickness="0,0,0,1"
+                Padding="10,8"
+                Margin="10,10,10,0">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button x:Name="ExportDataButton"
+                        Content="📤 Экспорт данных"
+                        Style="{StaticResource PrimaryButton}"
+                        Background="#2196F3"
+                        Margin="0,0,10,0"
+                        Padding="15,8"
+                        FontSize="13"
+                        ToolTip="Экспортировать все данные в файл"/>
+                <Button x:Name="ImportDataButton"
+                        Content="📥 Импорт данных"
+                        Style="{StaticResource PrimaryButton}"
+                        Background="#4CAF50"
+                        Padding="15,8"
+                        FontSize="13"
+                        ToolTip="Импортировать данные из файла"/>
+            </StackPanel>
+        </Border>
+
         <!-- Главный TabControl с вкладками -->
-        <TabControl TabStripPlacement="Top" 
+        <TabControl Grid.Row="1"
+                    TabStripPlacement="Top" 
                     Margin="10"
                     Background="White">
 
