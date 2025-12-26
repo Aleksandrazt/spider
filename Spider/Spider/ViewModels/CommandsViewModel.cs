@@ -198,7 +198,7 @@ namespace Spider.ViewModels
         /// <summary>
         /// Загрузка всех команд
         /// </summary>
-        private async Task LoadCommandsAsync()
+        public async Task LoadCommandsAsync()
         {
             try
             {

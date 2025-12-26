@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Newtonsoft.Json;
 
 namespace Spider.Models
 {
@@ -45,6 +46,7 @@ namespace Spider.Models
         /// <summary>
         /// Навигационное свойство для проекта
         /// </summary>
+        [JsonIgnore]
         public DockerProject? Project { get; set; }
     }
 }

@@ -180,7 +180,7 @@ namespace Spider.ViewModels
         /// <summary>
         /// Загрузка всех Docker проектов
         /// </summary>
-        private async Task LoadProjectsAsync()
+        public async Task LoadProjectsAsync()
         {
             try
             {
